@@ -35,12 +35,13 @@ on optional providers or visual polish.
 ### DEL-005 Learning gate
 
 The team shall not start cited.md or x402 integration until the local
-before/after result in TST-006 works.
+fresh-slate learning result in TST-006 works.
 
 ### DEL-006 External actions
 
 After the learning gate, the team shall connect the smallest inspectable
-cited.md publication and x402 testnet boundary required by TST-005.
+Actian episode write/retrieval, Band agent room, cited.md publication, and x402
+testnet boundary required by TST-002, TST-005, and TST-006.
 
 ### DEL-007 Reliability pass
 
@@ -58,9 +59,10 @@ upgrades, schema changes, or refactors; only demo-blocking fixes are permitted.
 
 ### DEL-010 Evidence capture
 
-The final state shall include captured evidence of agent coordination, memory
-write, initial and improved rankings, grounded cited.md output, and the x402
-testnet boundary.
+The final state shall include a Band room or sanitized message trace proving
+agent-to-agent routing, plus captured evidence of the Actian memory write and
+semantic retrieval, initial and next-opportunity rankings, grounded cited.md
+output, and the x402 testnet boundary.
 
 ## Remaining-time plan
 
@@ -71,18 +73,16 @@ Use elapsed time from the moment implementation begins:
 | T+0–15 min | Freeze fixtures/contracts; both owners can load the same objects |
 | T+15–70 min | Parallel ranker/learning work and single-page product shell |
 | T+70–90 min | Integrate and pass the local TST-006 learning moment |
-| T+90–125 min | Add cited.md and x402 testnet evidence in parallel |
+| T+90–125 min | Add Actian, cited.md, and x402 testnet evidence in parallel |
 | Final 25 min | Run all six checks, rehearse twice, capture evidence, freeze |
 
-If a timebox slips, keep the local learning loop and the two required external
-actions. Drop styling, generalized adapters, extra events, asynchronous
-training, database work, and vendor orchestration.
+If a timebox slips, keep the local learning loop and truthful fallback. Drop
+styling, generalized adapters, extra events, and asynchronous training before
+dropping challenge-required provider evidence.
 
 ## Explicitly deferred
 
 - Pioneer extraction, evaluation, and slow-loop training.
-- Actian storage and retrieval.
-- Band orchestration beyond visible local Scout/Analyst/Coach functions.
 - Generalized provider envelopes, extended negative-path tests, and
   production hardening.
 - Any feature or refactor not needed by TST-001 through TST-006.

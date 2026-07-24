@@ -1,7 +1,13 @@
 import unittest
 
 from product.schema_validation import SchemaValidationError, validate_schema
-from product.ui import EventCopilotUI, UIFlowError, load_canonical_demo
+from product.ui import (
+    BrowserDemoApplication,
+    CANONICAL_PROSPECTIVE_EVENT,
+    EventCopilotUI,
+    UIFlowError,
+    load_canonical_demo,
+)
 
 
 class ProductFlowTests(unittest.TestCase):
@@ -60,27 +66,51 @@ class ProductFlowTests(unittest.TestCase):
         self.assertIsNone(state.playbook.payment)
 
         validate_schema(state.episode.to_dict(), "episode")
+        validate_schema(state.prospective_event, "event")
+        next_event_ids = {
+            item.event_id if hasattr(item, "event_id") else item["event_id"]
+            for item in state.next_events
+        }
+        self.assertNotIn("evt_mixer_001", next_event_ids)
+        self.assertEqual(
+            next_event_ids,
+            {
+                "evt_workshop_001",
+                "evt_live_swarmhack_20260724",
+                "evt_live_step_sf_20260827",
+            },
+        )
         improved = [item.to_dict() for item in state.improved_recommendations]
         for recommendation in improved:
             validate_schema(recommendation, "recommendation")
         self.assertEqual(improved[0]["event_id"], "evt_workshop_001")
-        self.assertEqual(improved[2]["event_id"], "evt_mixer_001")
+        self.assertEqual(improved[2]["event_id"], "evt_live_step_sf_20260827")
+        prospect = improved[2]
         self.assertLess(
-            improved[2]["scores"]["overall"],
-            state.initial_recommendations[0]["scores"]["overall"],
+            prospect["scores"]["overall"],
+            72,
         )
         self.assertIn(
             state.episode.episode_id,
-            improved[2]["influencing_episode_ids"],
+            prospect["influencing_episode_ids"],
         )
-        self.assertIn("recorded feedback", improved[2]["reasons"][0].lower())
+        self.assertIn("recorded feedback", prospect["reasons"][0].lower())
+        self.assertEqual(state.next_event_modes[prospect["event_id"]], "live")
+        self.assertEqual(
+            prospect["citations"][0]["url"],
+            "https://luma.com/StepSF26",
+        )
 
         rendered = ui.render()
         self.assertIn("Scout →", rendered)
         self.assertIn("Analyst →", rendered)
         self.assertIn("Coach → Risk:", rendered)
-        self.assertIn("rank 2 → 1", rendered)
-        self.assertIn("score 81 → 67 (-14)", rendered)
+        self.assertIn("NEXT-EVENT RECOMMENDATIONS", rendered)
+        self.assertIn("Step SF 2026", rendered)
+        self.assertIn(
+            "Delta: NEW prospective event; no prior rank or score.",
+            rendered,
+        )
         self.assertIn(state.episode.episode_id, rendered)
 
     def test_after_state_requires_a_successful_episode_write(self) -> None:
@@ -105,6 +135,67 @@ class ProductFlowTests(unittest.TestCase):
             [item.scores["overall"] for item in first_state.improved_recommendations],
             [item.scores["overall"] for item in second_state.improved_recommendations],
         )
+
+    def test_browser_forms_accept_contract_shaped_setup_and_feedback(self) -> None:
+        profile, events, feedback = load_canonical_demo()
+        app = BrowserDemoApplication(EventCopilotUI())
+        self.addCleanup(app.close)
+
+        configured = app.configure(
+            profile.to_dict(),
+            [event.to_dict() for event in events],
+        )
+        self.assertEqual(configured["stage"], 1)
+        self.assertEqual(configured["profile"]["user_id"], profile.user_id)
+        self.assertEqual(len(configured["events"]), 3)
+
+        app.run_control(2)
+        app.select_event("evt_mixer_001")
+        app.run_control(3)
+        app.run_control(4)
+        recorded = app.record_feedback(feedback.to_dict())
+        self.assertEqual(recorded["stage"], 5)
+        self.assertEqual(
+            recorded["episode"]["feedback"]["free_text_feedback"],
+            feedback.free_text_feedback,
+        )
+
+        improved = app.evaluate_prospect(CANONICAL_PROSPECTIVE_EVENT)
+        self.assertEqual(improved["stage"], 6)
+        self.assertEqual(
+            improved["improved_recommendations"][0]["event_id"],
+            "evt_workshop_001",
+        )
+        self.assertEqual(
+            improved["prospective_event"]["event_id"],
+            "evt_live_step_sf_20260827",
+        )
+        self.assertNotIn(
+            "evt_mixer_001",
+            {event["event_id"] for event in improved["next_events"]},
+        )
+        prospect = next(
+            item
+            for item in improved["improved_recommendations"]
+            if item["event_id"] == "evt_live_step_sf_20260827"
+        )
+        self.assertIn(
+            improved["episode"]["episode_id"],
+            prospect["influencing_episode_ids"],
+        )
+
+    def test_browser_form_setup_rejects_invalid_contract_input(self) -> None:
+        profile, events, _ = load_canonical_demo()
+        invalid_profile = profile.to_dict()
+        invalid_profile["role"] = ""
+        app = BrowserDemoApplication(EventCopilotUI())
+        self.addCleanup(app.close)
+
+        with self.assertRaisesRegex(UIFlowError, "Profile failed profile validation"):
+            app.configure(
+                invalid_profile,
+                [event.to_dict() for event in events],
+            )
 
 
 if __name__ == "__main__":

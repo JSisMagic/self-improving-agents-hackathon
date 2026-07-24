@@ -22,8 +22,10 @@ to override or expand the active hackathon release gate.
   fixtures, consumers, specs, and tests together.
 - Do not add new capability specs during the hackathon unless a contract
   ambiguity blocks TST-001 through TST-006.
-- Pioneer, Actian, Band, slow-loop training, and generalized hardening remain
-  deferred until the six active acceptance checks pass.
+- Pioneer, slow-loop training, and generalized hardening remain deferred until
+  the six active acceptance checks pass. Actian semantic memory and Band
+  coordination are the accepted connected boundaries in INT-005/ADR-0006 and
+  INT-006/ADR-0005 respectively.
 
 ## Validation
 

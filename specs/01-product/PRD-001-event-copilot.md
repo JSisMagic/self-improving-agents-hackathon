@@ -24,12 +24,15 @@ The build is one deterministic vertical slice, not a general event platform:
 3. Select one event and create a measurable Event Mission.
 4. Publish that grounded mission to cited.md and expose its detailed playbook
    through an x402 testnet boundary.
-5. Submit deliberate feedback, write one local episode, rerank the same events,
-   and visibly explain why the workshop overtakes the mixer.
+5. Submit deliberate feedback, write one Actian or labeled local-fallback
+   episode, discover a fresh live prospect, and rank a new candidate slate that
+   excludes the attended event. The interface must visibly explain how the
+   prior outcome affects the new live event.
 
-The core loop may use local fixtures and local persistence. A challenge-complete
-demo still needs one real event source, one inspectable cited.md publication,
-and one inspectable x402 testnet boundary.
+The core loop may use local fixtures and local persistence for continuity. A
+challenge-complete demo also needs a connected Actian write/retrieval, one real
+event source, one inspectable cited.md publication, and one inspectable x402
+testnet boundary.
 
 ## Primary loop
 
@@ -39,8 +42,9 @@ Profile + three grounded events
 → ranked recommendations + Event Mission
 → cited.md publication + x402 playbook boundary
 → deliberate feedback
-→ local episode write
-→ visible before/after reranking
+→ Actian or labeled local-fallback episode write
+→ fresh grounded event discovery
+→ visible evidence-informed next ranking
 ```
 
 ## Requirements
@@ -68,13 +72,20 @@ opportunity, personal-fit, and friction scores.
 
 ### PROD-005 Experience memory
 
-The product shall locally persist and retrieve event episodes and identify
-which episode influenced the post-feedback recommendation.
+The connected product shall persist EventEpisodes in Actian VectorAI DB,
+retrieve same-user episodes by semantic event similarity, and identify which
+episode influenced the post-feedback recommendation. The deterministic local
+path shall persist schema-valid episodes in JSON, retain local event-retrieval
+metadata, retrieve same-user episodes with a deterministic structured-event
+similarity rule, and label that storage as `local_fallback`.
 
 ### PROD-006 Coordinated agents
 
-The product shall expose a concise Scout, Analyst, and Coach handoff. Distinct
-functions or prompts are sufficient; an orchestration vendor is not required.
+The product shall expose a concise Scout, Analyst, and Coach handoff. In
+connected mode, the roles shall be independently authenticated Band agents
+coordinating through targeted messages in one inspectable room. In local mode,
+the same role functions shall run directly and the interface shall say
+`demo_fallback`.
 
 ### PROD-007 Measurable mission
 
@@ -101,8 +112,11 @@ simulated event.
 
 ### PROD-011 Visible self-improvement
 
-After feedback is recorded, the product shall rerun ranking and show the score
-or rank delta plus the evidence-based reason for the change.
+After feedback is recorded, the product shall rank a fresh candidate slate
+that excludes the attended event and includes at least one newly discovered
+live event. It shall show the memory-adjusted score and evidence-based reason
+for the new event without inventing a prior rank for a candidate that was not
+in the initial slate.
 
 ### PROD-012 Non-blocking integrations
 
@@ -114,9 +128,11 @@ label that degraded mode truthfully.
 
 Use a fictional technical founder whose priorities are continuing peer
 relationships, autonomous-agent implementation knowledge, and collaborators or
-distribution opportunities. The three-event fixture must include a large mixer
-and a smaller participatory workshop so deliberate feedback can reverse their
-initial ordering.
+distribution opportunities. The initial three-event fixture must include a
+large mixer and a smaller participatory workshop. After deliberate mixer
+feedback, the next slate keeps the two unvisited candidates, removes the
+attended mixer, and adds a newly grounded live prospect so the demo proves that
+experience changes a future decision rather than rescoring the past.
 
 ## Non-goals for the hackathon version
 

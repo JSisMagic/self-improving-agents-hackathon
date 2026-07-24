@@ -1,0 +1,1057 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f7f3">
+  <link rel="icon" href="data:,">
+  <title>Event Copilot</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --page: #f6f7f3;
+      --card: #ffffff;
+      --ink: #18201a;
+      --muted: #687269;
+      --line: #e1e6df;
+      --soft: #f1f4ef;
+      --green: #2f6d45;
+      --green-soft: #e6f2e8;
+      --blue-soft: #e9f1fb;
+      --orange-soft: #fff0df;
+      --red: #a33f35;
+      --shadow: 0 18px 50px rgba(24, 32, 26, .08);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      color: var(--ink);
+      background: var(--page);
+    }
+    button, summary { font: inherit; }
+    button { color: inherit; }
+    a { color: var(--green); }
+    .app { width: min(940px, calc(100% - 32px)); margin: 0 auto; padding: 24px 0 56px; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 20px; min-height: 44px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: -.02em; }
+    .mark {
+      width: 30px; height: 30px; display: grid; place-items: center;
+      border-radius: 9px; color: white; background: var(--green);
+      font-size: 12px; font-weight: 900;
+    }
+    .top-actions { display: flex; align-items: center; gap: 8px; }
+    .quiet-button {
+      padding: 8px 10px; border: 0; border-radius: 9px; color: var(--muted);
+      background: transparent; font-size: 12px; font-weight: 700; cursor: pointer;
+    }
+    .quiet-button:hover { color: var(--ink); background: var(--soft); }
+    .progress {
+      display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px;
+      margin: 24px 0 16px;
+    }
+    .step {
+      min-width: 0; padding: 10px 6px; border: 0; border-radius: 10px;
+      color: #8a938b; background: transparent;
+      font-size: 11px; font-weight: 700; text-align: center;
+    }
+    .step-number {
+      width: 24px; height: 24px; display: grid; place-items: center;
+      margin: 0 auto 5px; border: 1px solid #cfd6ce; border-radius: 50%;
+      background: var(--card); font-size: 10px;
+    }
+    .step.done { color: var(--green); }
+    .step.done .step-number { color: white; border-color: var(--green); background: var(--green); }
+    .step.current { color: var(--ink); background: var(--green-soft); }
+    .step.current .step-number { color: var(--green); border-color: var(--green); }
+    .card {
+      min-height: 520px; overflow: hidden; border: 1px solid var(--line);
+      border-radius: 20px; background: var(--card); box-shadow: var(--shadow);
+    }
+    .card-head {
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 18px;
+      padding: 28px 30px 22px; border-bottom: 1px solid var(--line);
+    }
+    .stage-label {
+      margin: 0 0 7px; color: var(--green); font-size: 11px;
+      font-weight: 850; letter-spacing: .1em; text-transform: uppercase;
+    }
+    h1 { margin: 0; font-size: clamp(27px, 4vw, 38px); line-height: 1.08; letter-spacing: -.045em; }
+    .subtitle { max-width: 610px; margin: 8px 0 0; color: var(--muted); font-size: 14px; line-height: 1.5; }
+    .status-row { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+    .pill {
+      display: inline-flex; align-items: center; padding: 5px 8px;
+      border-radius: 999px; color: #59635b; background: var(--soft);
+      font-size: 10px; font-weight: 800; white-space: nowrap;
+    }
+    .pill.live, .pill.connected { color: var(--green); background: var(--green-soft); }
+    .pill.fixture, .pill.demo_fallback { color: #315f91; background: var(--blue-soft); }
+    .pill.disabled { color: #8c551d; background: var(--orange-soft); }
+    .pill.error { color: var(--red); background: #fde8e5; }
+    .content { padding: 26px 30px 30px; }
+    .form-toolbar {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; margin-bottom: 18px;
+    }
+    .form-toolbar p { margin: 0; color: var(--muted); font-size: 11px; }
+    .form-actions { display: flex; gap: 7px; }
+    .secondary {
+      min-height: 36px; padding: 0 12px; border: 1px solid var(--line);
+      border-radius: 9px; color: #4f5951; background: white;
+      font-size: 11px; font-weight: 800; cursor: pointer;
+    }
+    .secondary:hover { border-color: #9bac9e; background: var(--soft); }
+    .form-section {
+      margin-top: 14px; padding: 17px; border: 1px solid var(--line);
+      border-radius: 14px; background: #fbfcfa;
+    }
+    .form-section:first-of-type { margin-top: 0; }
+    .form-section h2 { margin: 0 0 13px; font-size: 15px; }
+    .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .form-grid.three { grid-template-columns: repeat(3, 1fr); }
+    .field { display: grid; gap: 5px; min-width: 0; }
+    .field.full { grid-column: 1 / -1; }
+    .field label { color: #4d574f; font-size: 10px; font-weight: 800; }
+    .field small { color: #8a938b; font-size: 9px; line-height: 1.35; }
+    input, select, textarea {
+      width: 100%; min-height: 39px; padding: 9px 10px;
+      border: 1px solid #ccd4cb; border-radius: 9px;
+      color: var(--ink); background: white; font: inherit; font-size: 12px;
+      outline: none; transition: border-color .15s, box-shadow .15s;
+    }
+    textarea { min-height: 74px; resize: vertical; line-height: 1.4; }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--green); box-shadow: 0 0 0 3px rgba(47, 109, 69, .1);
+    }
+    .event-editor {
+      margin-top: 10px; border: 1px solid var(--line);
+      border-radius: 12px; background: white;
+    }
+    .event-editor summary {
+      padding: 13px 14px; font-size: 12px; font-weight: 850; cursor: pointer;
+    }
+    .event-fields { padding: 2px 14px 15px; }
+    .form-submit {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 14px; margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--line);
+    }
+    .form-submit span { color: var(--muted); font-size: 10px; }
+    .intro {
+      min-height: 370px; display: grid; place-items: center; text-align: center;
+    }
+    .intro-inner { max-width: 510px; }
+    .intro-icon {
+      width: 58px; height: 58px; display: grid; place-items: center;
+      margin: 0 auto 18px; border-radius: 17px; color: white; background: var(--green);
+      font-size: 22px; font-weight: 900;
+    }
+    .intro h2 { margin: 0 0 10px; font-size: 25px; letter-spacing: -.035em; }
+    .intro p { margin: 0 0 22px; color: var(--muted); font-size: 14px; line-height: 1.55; }
+    .primary {
+      min-height: 44px; padding: 0 18px; border: 0; border-radius: 11px;
+      color: white; background: var(--green); font-weight: 800; cursor: pointer;
+      box-shadow: 0 5px 14px rgba(47, 109, 69, .18);
+    }
+    .primary:hover { background: #265d3a; }
+    .primary:disabled { opacity: .55; cursor: wait; }
+    .section-title { margin: 0 0 14px; font-size: 12px; font-weight: 850; letter-spacing: .06em; text-transform: uppercase; }
+    .profile {
+      display: grid; grid-template-columns: 1fr 1.15fr; gap: 22px;
+      padding: 18px; border-radius: 14px; background: var(--soft);
+    }
+    .profile h2 { margin: 3px 0 7px; font-size: 19px; letter-spacing: -.025em; }
+    .profile p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
+    .goals { display: grid; gap: 10px; }
+    .goal { display: grid; grid-template-columns: 86px 1fr 38px; gap: 9px; align-items: center; font-size: 11px; text-transform: capitalize; }
+    .track { height: 6px; overflow: hidden; border-radius: 999px; background: #dce2da; }
+    .track span { display: block; height: 100%; border-radius: inherit; background: var(--green); }
+    .goal strong { text-align: right; color: var(--green); }
+    .rows { display: grid; gap: 9px; }
+    .event-row {
+      width: 100%; display: grid; grid-template-columns: 42px minmax(0, 1fr) auto;
+      gap: 13px; align-items: center; padding: 13px; border: 1px solid var(--line);
+      border-radius: 13px; text-align: left; background: white;
+    }
+    button.event-row { cursor: pointer; }
+    button.event-row:hover, .event-row.selected { border-color: #7ba98a; background: #f8fcf8; }
+    .rank {
+      width: 40px; height: 40px; display: grid; place-items: center;
+      border-radius: 11px; color: var(--green); background: var(--green-soft);
+      font-size: 13px; font-weight: 900;
+    }
+    .event-copy { min-width: 0; }
+    .event-copy h3 { margin: 0 0 4px; overflow: hidden; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
+    .event-copy p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.4; }
+    .score { min-width: 54px; text-align: right; font-size: 22px; font-weight: 900; letter-spacing: -.04em; }
+    .score small { display: block; color: var(--muted); font-size: 9px; font-weight: 700; letter-spacing: 0; }
+    .selected-note { margin: 10px 2px 0; color: var(--green); font-size: 11px; font-weight: 750; }
+    .details {
+      margin-top: 14px; border: 1px solid var(--line); border-radius: 12px; background: #fbfcfa;
+    }
+    .details summary {
+      padding: 12px 14px; color: #4e5850; font-size: 11px;
+      font-weight: 800; cursor: pointer; list-style-position: inside;
+    }
+    .details-body { padding: 0 14px 14px; color: var(--muted); font-size: 11px; line-height: 1.5; }
+    .details-body p { margin: 7px 0; }
+    .score-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px; }
+    .score-item { padding: 9px; border-radius: 9px; text-align: center; background: var(--soft); }
+    .score-item strong { display: block; margin-bottom: 2px; color: var(--ink); font-size: 15px; }
+    .score-item span { font-size: 9px; }
+    .agent-line {
+      display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 14px;
+      color: var(--muted); font-size: 11px;
+    }
+    .agent-line span { padding: 6px 8px; border-radius: 8px; background: var(--soft); }
+    .objective-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; }
+    .objective { padding: 14px; border-radius: 12px; background: var(--soft); }
+    .objective strong { display: block; color: var(--green); font-size: 23px; }
+    .objective span { display: block; margin-top: 3px; font-size: 11px; font-weight: 750; }
+    pre {
+      max-height: 300px; margin: 0; padding: 13px; overflow: auto;
+      border-radius: 10px; color: #dce6dd; background: #172019;
+      font: 10px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace;
+      white-space: pre-wrap; word-break: break-word;
+    }
+    .status-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .status-card { padding: 16px; border: 1px solid var(--line); border-radius: 13px; }
+    .status-card-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .status-card h3 { margin: 0; font-size: 13px; }
+    .status-card p { margin: 8px 0 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
+    .feedback {
+      display: grid; grid-template-columns: 1.25fr .75fr; gap: 14px;
+      padding: 18px; border-radius: 14px; background: var(--soft);
+    }
+    .feedback h2 { margin: 0 0 7px; font-size: 20px; }
+    .feedback p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .metrics { display: grid; grid-template-columns: repeat(2, 1fr); gap: 7px; }
+    .metric { padding: 10px; border-radius: 10px; background: white; }
+    .metric strong { display: block; font-size: 17px; }
+    .metric span { color: var(--muted); font-size: 9px; }
+    .result {
+      display: grid; grid-template-columns: 1fr auto; gap: 20px; align-items: center;
+      padding: 20px; border-radius: 15px; background: var(--green-soft);
+    }
+    .result h2 { margin: 0 0 6px; font-size: 24px; letter-spacing: -.035em; }
+    .result p { margin: 0; color: #506356; font-size: 12px; line-height: 1.5; }
+    .result-score { color: var(--green); font-size: 31px; font-weight: 900; white-space: nowrap; }
+    .delta { color: var(--red); }
+    .footer {
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      margin-top: 22px; padding-top: 20px; border-top: 1px solid var(--line);
+    }
+    .footer-note { color: var(--muted); font-size: 11px; line-height: 1.4; }
+    .toast {
+      position: fixed; left: 50%; bottom: 22px; z-index: 10;
+      max-width: calc(100% - 32px); padding: 11px 14px; border-radius: 10px;
+      color: white; background: var(--ink); box-shadow: var(--shadow);
+      font-size: 12px; opacity: 0; transform: translate(-50%, 12px);
+      pointer-events: none; transition: .2s ease;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .toast.error { background: var(--red); }
+    body.busy .card { opacity: .72; }
+    @media (max-width: 700px) {
+      .app { width: min(100% - 20px, 940px); padding-top: 12px; }
+      .progress { gap: 2px; margin-top: 16px; }
+      .step { padding: 8px 2px; }
+      .step-label { display: none; }
+      .step-number { margin-bottom: 0; }
+      .card { min-height: 0; border-radius: 16px; }
+      .card-head { display: block; padding: 22px 20px 18px; }
+      .status-row { justify-content: flex-start; margin-top: 13px; }
+      .content { padding: 20px; }
+      .form-toolbar, .form-submit { align-items: stretch; flex-direction: column; }
+      .form-actions { width: 100%; }
+      .form-actions .secondary { flex: 1; }
+      .form-grid, .form-grid.three { grid-template-columns: 1fr; }
+      .field.full { grid-column: auto; }
+      .form-submit .primary { width: 100%; }
+      .profile, .feedback { grid-template-columns: 1fr; }
+      .objective-grid { grid-template-columns: 1fr; }
+      .status-cards { grid-template-columns: 1fr; }
+      .score-grid { grid-template-columns: repeat(3, 1fr); }
+      .event-row { grid-template-columns: 38px minmax(0, 1fr) 50px; }
+      .event-copy p { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .footer { align-items: stretch; flex-direction: column; }
+      .footer .primary { width: 100%; }
+      .result { grid-template-columns: 1fr; }
+      .result-score { font-size: 25px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand"><span class="mark" aria-hidden="true">E</span>Event Copilot</div>
+      <div class="top-actions">
+        <button class="quiet-button" id="resetButton" type="button">Reset</button>
+        <button class="quiet-button" id="runAllButton" type="button">Run full demo</button>
+      </div>
+    </header>
+    <nav class="progress" id="progress" aria-label="Demo progress"></nav>
+    <section class="card" aria-live="polite">
+      <header class="card-head">
+        <div>
+          <p class="stage-label" id="stageLabel">Ready</p>
+          <h1 id="stageTitle">Choose the right event</h1>
+          <p class="subtitle" id="stageSubtitle">A short guided demo that learns from what happened.</p>
+        </div>
+        <div class="status-row" id="statusRow"></div>
+      </header>
+      <div class="content" id="content"></div>
+    </section>
+  </main>
+  <div class="toast" id="toast" role="status"></div>
+  <script>
+    const steps = [
+      "Profile", "Rank", "Mission", "Playbook", "Feedback", "Next slate"
+    ];
+    const stageText = [
+      ["Step 1 of 6", "Tell us what matters", "Enter your goals and three events, or fill the form with demo examples."],
+      ["Step 1 of 6", "Your goals and three events", "Confirm what matters before ranking."],
+      ["Step 2 of 6", "Pick an event", "The top recommendation is selected by default. Choose another if you prefer."],
+      ["Step 3 of 6", "Your Event Mission", "Three measurable goals for the selected event."],
+      ["Step 4 of 6", "Record what happened", "Review action status, then enter the event outcome."],
+      ["Step 5 of 6", "Add the next live event", "Replace the attended event with one genuinely new prospect."],
+      ["Complete", "Your next-event ranking", "Two unvisited candidates and one new live prospect were evaluated after feedback."]
+    ];
+    let state = null;
+    let examples = null;
+    let busy = false;
+
+    const h = (value) => String(value ?? "Not reported").replace(/[&<>"']/g, (char) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
+    })[char]);
+    const list = (value) => Array.isArray(value) ? value : [];
+    const obj = (value) => value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const mode = (value) => ["connected", "demo_fallback", "disabled", "error", "live", "fixture"].includes(value) ? value : "error";
+    const eventMap = () => Object.fromEntries(
+      [...list(state.events), ...list(state.next_events)]
+        .map((event) => [event.event_id, event])
+    );
+    const safeUrl = (value) => {
+      try {
+        const parsed = new URL(String(value));
+        return ["http:", "https:"].includes(parsed.protocol) ? h(parsed.href) : "#";
+      } catch { return "#"; }
+    };
+    const csv = (value) => String(value || "").split(",").map((item) => item.trim()).filter(Boolean);
+    const lines = (value) => String(value || "").split(/\n/).map((item) => item.trim()).filter(Boolean);
+    const numeric = (value) => Number.parseFloat(String(value));
+    const integer = (value) => Number.parseInt(String(value), 10);
+    const formValue = (form, name) => String(form.elements.namedItem(name)?.value || "").trim();
+    const setFormValue = (form, name, value) => {
+      const field = form.elements.namedItem(name);
+      if (field) field.value = value == null ? "" : String(value);
+    };
+    const clearForm = (id) => {
+      const form = document.getElementById(id);
+      if (!form) return;
+      form.querySelectorAll("input, select, textarea").forEach((field) => { field.value = ""; });
+    };
+    const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+    function notify(message, error = false) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.className = `toast show${error ? " error" : ""}`;
+      clearTimeout(notify.timer);
+      notify.timer = setTimeout(() => { toast.className = "toast"; }, 2200);
+    }
+
+    async function api(path, options = {}) {
+      document.body.classList.add("busy");
+      try {
+        const response = await fetch(path, {
+          headers: { "Content-Type": "application/json" },
+          ...options
+        });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error || "The action could not be completed.");
+        return payload;
+      } finally {
+        document.body.classList.remove("busy");
+      }
+    }
+
+    async function refresh() {
+      const [payload, examplePayload] = await Promise.all([
+        api("/api/state"),
+        api("/api/examples")
+      ]);
+      state = payload.state;
+      examples = examplePayload.examples;
+      render();
+    }
+
+    async function control(number) {
+      if (busy) return;
+      busy = true;
+      renderProgress();
+      try {
+        const payload = await api("/api/control", {
+          method: "POST",
+          body: JSON.stringify({ control: number })
+        });
+        state = payload.state;
+        render();
+      } catch (error) {
+        notify(error.message, true);
+      } finally {
+        busy = false;
+        renderProgress();
+      }
+    }
+
+    async function selectEvent(eventId) {
+      if (busy) return;
+      busy = true;
+      try {
+        const payload = await api("/api/select", {
+          method: "POST",
+          body: JSON.stringify({ event_id: eventId })
+        });
+        state = payload.state;
+        render();
+        notify(`${eventMap()[eventId]?.title || eventId} selected.`);
+      } catch (error) {
+        notify(error.message, true);
+      } finally {
+        busy = false;
+      }
+    }
+
+    function setupPayload(form) {
+      const profile = {
+        schema_version: "1.0",
+        user_id: formValue(form, "profile.user_id"),
+        role: formValue(form, "profile.role"),
+        goal_priorities: {
+          networking: numeric(formValue(form, "profile.networking")),
+          knowledge: numeric(formValue(form, "profile.knowledge")),
+          opportunity: numeric(formValue(form, "profile.opportunity"))
+        },
+        desired_outcomes: lines(formValue(form, "profile.desired_outcomes")),
+        preferences: {
+          themes: csv(formValue(form, "profile.themes")),
+          formats: csv(formValue(form, "profile.formats"))
+        },
+        constraints: {
+          location: formValue(form, "profile.location"),
+          max_cost_usd: numeric(formValue(form, "profile.max_cost_usd")),
+          preferred_max_crowd_size: integer(formValue(form, "profile.preferred_max_crowd_size"))
+        }
+      };
+      const events = [0, 1, 2].map((index) => {
+        const prefix = `events.${index}.`;
+        const crowd = formValue(form, `${prefix}estimated_crowd_size`);
+        return {
+          schema_version: "1.0",
+          data_mode: formValue(form, `${prefix}data_mode`),
+          event_id: formValue(form, `${prefix}event_id`),
+          title: formValue(form, `${prefix}title`),
+          description: formValue(form, `${prefix}description`),
+          source_url: formValue(form, `${prefix}source_url`),
+          source_name: formValue(form, `${prefix}source_name`),
+          start_time: formValue(form, `${prefix}start_time`),
+          location: formValue(form, `${prefix}location`),
+          themes: csv(formValue(form, `${prefix}themes`)),
+          format: formValue(form, `${prefix}format`),
+          interaction_level: numeric(formValue(form, `${prefix}interaction_level`)),
+          knowledge_depth: numeric(formValue(form, `${prefix}knowledge_depth`)),
+          estimated_crowd_size: crowd === "" ? null : integer(crowd),
+          cost_usd: numeric(formValue(form, `${prefix}cost_usd`))
+        };
+      });
+      return { profile, events };
+    }
+
+    async function configureFromForm() {
+      if (busy) return;
+      const form = document.getElementById("setupForm");
+      if (!form || !form.reportValidity()) return;
+      busy = true;
+      try {
+        const payload = await api("/api/configure", {
+          method: "POST",
+          body: JSON.stringify(setupPayload(form))
+        });
+        state = payload.state;
+        render();
+        notify("Profile and events saved.");
+      } catch (error) {
+        notify(error.message, true);
+      } finally {
+        busy = false;
+        renderProgress();
+      }
+    }
+
+    function fillSetupExamples() {
+      const form = document.getElementById("setupForm");
+      if (!form || !examples) return;
+      const profile = obj(examples.profile);
+      const goals = obj(profile.goal_priorities);
+      const constraints = obj(profile.constraints);
+      const preferences = obj(profile.preferences);
+      [
+        ["profile.user_id", profile.user_id],
+        ["profile.role", profile.role],
+        ["profile.networking", goals.networking],
+        ["profile.knowledge", goals.knowledge],
+        ["profile.opportunity", goals.opportunity],
+        ["profile.desired_outcomes", list(profile.desired_outcomes).join("\n")],
+        ["profile.themes", list(preferences.themes).join(", ")],
+        ["profile.formats", list(preferences.formats).join(", ")],
+        ["profile.location", constraints.location],
+        ["profile.max_cost_usd", constraints.max_cost_usd],
+        ["profile.preferred_max_crowd_size", constraints.preferred_max_crowd_size]
+      ].forEach(([name, value]) => setFormValue(form, name, value));
+      list(examples.events).forEach((event, index) => {
+        const prefix = `events.${index}.`;
+        [
+          ["data_mode", event.data_mode], ["event_id", event.event_id],
+          ["title", event.title], ["description", event.description],
+          ["source_url", event.source_url], ["source_name", event.source_name],
+          ["start_time", event.start_time], ["location", event.location],
+          ["themes", list(event.themes).join(", ")], ["format", event.format],
+          ["interaction_level", event.interaction_level],
+          ["knowledge_depth", event.knowledge_depth],
+          ["estimated_crowd_size", event.estimated_crowd_size],
+          ["cost_usd", event.cost_usd]
+        ].forEach(([name, value]) => setFormValue(form, `${prefix}${name}`, value));
+      });
+      notify("Example values filled. Every field is still editable.");
+    }
+
+    function feedbackPayload(form) {
+      return {
+        schema_version: "1.0",
+        user_id: formValue(form, "feedback.user_id"),
+        event_id: formValue(form, "feedback.event_id"),
+        submitted_at: formValue(form, "feedback.submitted_at"),
+        meaningful_conversations: integer(formValue(form, "feedback.meaningful_conversations")),
+        contacts_exchanged: integer(formValue(form, "feedback.contacts_exchanged")),
+        followups_sent: integer(formValue(form, "feedback.followups_sent")),
+        meetings_booked: integer(formValue(form, "feedback.meetings_booked")),
+        questions_answered: integer(formValue(form, "feedback.questions_answered")),
+        actionable_insights: integer(formValue(form, "feedback.actionable_insights")),
+        opportunities_created: integer(formValue(form, "feedback.opportunities_created")),
+        energy_after: integer(formValue(form, "feedback.energy_after")),
+        overall_value: integer(formValue(form, "feedback.overall_value")),
+        free_text_feedback: formValue(form, "feedback.free_text_feedback")
+      };
+    }
+
+    async function recordFeedbackFromForm() {
+      if (busy) return;
+      const form = document.getElementById("feedbackForm");
+      if (!form || !form.reportValidity()) return;
+      busy = true;
+      try {
+        const payload = await api("/api/feedback", {
+          method: "POST",
+          body: JSON.stringify({ feedback: feedbackPayload(form) })
+        });
+        state = payload.state;
+        render();
+        notify("Outcome saved as a local episode.");
+      } catch (error) {
+        notify(error.message, true);
+      } finally {
+        busy = false;
+        renderProgress();
+      }
+    }
+
+    function fillFeedbackExamples() {
+      const form = document.getElementById("feedbackForm");
+      if (!form || !examples) return;
+      const feedback = obj(examples.feedback);
+      Object.entries(feedback).forEach(([key, value]) => {
+        if (!["schema_version", "user_id", "event_id"].includes(key)) {
+          setFormValue(form, `feedback.${key}`, value);
+        }
+      });
+      setFormValue(form, "feedback.user_id", obj(state.profile).user_id);
+      const eventIds = list(state.events).map((event) => event.event_id);
+      const exampleEventId = eventIds.includes(feedback.event_id)
+        ? feedback.event_id
+        : (state.selected_event_id || eventIds[0]);
+      setFormValue(form, "feedback.event_id", exampleEventId);
+      notify("Example outcome filled. Adjust any value before saving.");
+    }
+
+    function prospectPayload(form) {
+      const crowd = formValue(form, "prospect.estimated_crowd_size");
+      return {
+        schema_version: "1.0",
+        data_mode: "live",
+        event_id: formValue(form, "prospect.event_id"),
+        title: formValue(form, "prospect.title"),
+        description: formValue(form, "prospect.description"),
+        source_url: formValue(form, "prospect.source_url"),
+        source_name: formValue(form, "prospect.source_name"),
+        start_time: formValue(form, "prospect.start_time"),
+        location: formValue(form, "prospect.location"),
+        themes: csv(formValue(form, "prospect.themes")),
+        format: formValue(form, "prospect.format"),
+        interaction_level: numeric(formValue(form, "prospect.interaction_level")),
+        knowledge_depth: numeric(formValue(form, "prospect.knowledge_depth")),
+        estimated_crowd_size: crowd === "" ? null : integer(crowd),
+        cost_usd: numeric(formValue(form, "prospect.cost_usd"))
+      };
+    }
+
+    async function evaluateProspectFromForm() {
+      if (busy) return;
+      const form = document.getElementById("prospectForm");
+      if (!form || !form.reportValidity()) return;
+      busy = true;
+      try {
+        const payload = await api("/api/prospect", {
+          method: "POST",
+          body: JSON.stringify({ event: prospectPayload(form) })
+        });
+        state = payload.state;
+        render();
+        notify("New live prospect evaluated after feedback.");
+      } catch (error) {
+        notify(error.message, true);
+      } finally {
+        busy = false;
+        renderProgress();
+      }
+    }
+
+    function fillProspectExample() {
+      const form = document.getElementById("prospectForm");
+      const prospect = obj(examples?.prospective_event);
+      if (!form || !Object.keys(prospect).length) return;
+      [
+        ["event_id", prospect.event_id], ["title", prospect.title],
+        ["description", prospect.description], ["source_url", prospect.source_url],
+        ["source_name", prospect.source_name], ["start_time", prospect.start_time],
+        ["location", prospect.location], ["themes", list(prospect.themes).join(", ")],
+        ["format", prospect.format], ["interaction_level", prospect.interaction_level],
+        ["knowledge_depth", prospect.knowledge_depth],
+        ["estimated_crowd_size", prospect.estimated_crowd_size],
+        ["cost_usd", prospect.cost_usd]
+      ].forEach(([name, value]) => setFormValue(form, `prospect.${name}`, value));
+      notify("Verified Step SF 2026 example filled from its Luma source.");
+    }
+
+    async function reset() {
+      if (busy) return;
+      busy = true;
+      try {
+        const payload = await api("/api/reset", { method: "POST", body: "{}" });
+        state = payload.state;
+        render();
+      } catch (error) {
+        notify(error.message, true);
+      } finally {
+        busy = false;
+        renderProgress();
+      }
+    }
+
+    async function runAll() {
+      if (busy) return;
+      busy = true;
+      renderProgress();
+      try {
+        let payload = await api("/api/reset", { method: "POST", body: "{}" });
+        state = payload.state;
+        render();
+        for (let number = 1; number <= 5; number += 1) {
+          payload = await api("/api/control", {
+            method: "POST",
+            body: JSON.stringify({ control: number })
+          });
+          state = payload.state;
+          render();
+          await sleep(180);
+        }
+        payload = await api("/api/prospect", {
+          method: "POST",
+          body: JSON.stringify({ event: examples.prospective_event })
+        });
+        state = payload.state;
+        render();
+        notify("Demo complete. A new verified live prospect was evaluated.");
+      } catch (error) {
+        notify(error.message, true);
+      } finally {
+        busy = false;
+        renderProgress();
+      }
+    }
+
+    function renderProgress() {
+      if (!state) return;
+      const stage = Number(state.stage || 0);
+      document.getElementById("progress").innerHTML = steps.map((label, index) => {
+        const number = index + 1;
+        const done = stage >= number;
+        const current = stage + 1 === number || (stage === 6 && number === 6);
+        return `<span class="step${done ? " done" : ""}${current ? " current" : ""}" ${current ? 'aria-current="step"' : ""}>
+          <span class="step-number">${done ? "✓" : number}</span>
+          <span class="step-label">${h(label)}</span>
+        </span>`;
+      }).join("");
+      document.getElementById("runAllButton").disabled = busy;
+      document.getElementById("resetButton").disabled = busy;
+    }
+
+    function renderStatus() {
+      const chips = [];
+      const modes = Object.values(
+        obj(state.stage === 6 ? state.next_event_modes : state.event_modes)
+      );
+      const band = obj(obj(state.handoff).band);
+      if (state.stage >= 1) {
+        chips.push(`<span class="pill live">${modes.filter((item) => item === "live").length} live</span>`);
+        chips.push(`<span class="pill fixture">${modes.filter((item) => item === "fixture").length} fixtures</span>`);
+      } else {
+        chips.push('<span class="pill">Local demo</span>');
+      }
+      if (state.handoff) {
+        const bandMode = mode(band.mode);
+        chips.push(`<span class="pill ${h(bandMode)}">Band: ${h(bandMode)}</span>`);
+      }
+      if (state.publication) {
+        const publicationMode = mode(obj(state.publication).mode);
+        chips.push(`<span class="pill ${h(publicationMode)}">cited.md: ${h(publicationMode)}</span>`);
+      }
+      if (state.playbook) {
+        const playbookMode = mode(obj(state.playbook).mode);
+        chips.push(`<span class="pill ${h(playbookMode)}">x402: ${h(playbookMode)}</span>`);
+      }
+      document.getElementById("statusRow").innerHTML = chips.join("");
+    }
+
+    function footer(note, action, label) {
+      return `<div class="footer"><span class="footer-note">${h(note)}</span><button class="primary" data-control="${action}" type="button">${h(label)}</button></div>`;
+    }
+
+    function eventEditor(index) {
+      return `<details class="event-editor" ${index === 0 ? "open" : ""}>
+        <summary>Event ${index + 1}</summary>
+        <div class="event-fields form-grid">
+          <div class="field"><label for="event-${index}-mode">Data source</label><select id="event-${index}-mode" name="events.${index}.data_mode" required><option value="">Choose…</option><option value="fixture">Fixture</option><option value="live">Live</option></select></div>
+          <div class="field"><label for="event-${index}-id">Event ID</label><input id="event-${index}-id" name="events.${index}.event_id" required placeholder="event_001"></div>
+          <div class="field full"><label for="event-${index}-title">Title</label><input id="event-${index}-title" name="events.${index}.title" required placeholder="Event name"></div>
+          <div class="field full"><label for="event-${index}-description">Description</label><textarea id="event-${index}-description" name="events.${index}.description" required placeholder="What happens at this event?"></textarea></div>
+          <div class="field"><label for="event-${index}-source-url">Source URL</label><input id="event-${index}-source-url" name="events.${index}.source_url" type="url" required placeholder="https://example.com/event"></div>
+          <div class="field"><label for="event-${index}-source-name">Source name</label><input id="event-${index}-source-name" name="events.${index}.source_name" required placeholder="Event website"></div>
+          <div class="field"><label for="event-${index}-start">Start time</label><input id="event-${index}-start" name="events.${index}.start_time" required placeholder="2026-07-25T18:00:00-07:00"><small>ISO date-time with timezone</small></div>
+          <div class="field"><label for="event-${index}-location">Location</label><input id="event-${index}-location" name="events.${index}.location" required placeholder="San Francisco"></div>
+          <div class="field"><label for="event-${index}-themes">Themes</label><input id="event-${index}-themes" name="events.${index}.themes" required placeholder="AI agents, founders"><small>Separate with commas</small></div>
+          <div class="field"><label for="event-${index}-format">Format</label><input id="event-${index}-format" name="events.${index}.format" required placeholder="workshop"></div>
+          <div class="field"><label for="event-${index}-interaction">Interaction level</label><input id="event-${index}-interaction" name="events.${index}.interaction_level" type="number" min="0" max="1" step="0.01" required placeholder="0.8"></div>
+          <div class="field"><label for="event-${index}-depth">Knowledge depth</label><input id="event-${index}-depth" name="events.${index}.knowledge_depth" type="number" min="0" max="1" step="0.01" required placeholder="0.9"></div>
+          <div class="field"><label for="event-${index}-crowd">Estimated crowd</label><input id="event-${index}-crowd" name="events.${index}.estimated_crowd_size" type="number" min="0" step="1" placeholder="100"><small>Optional when unknown</small></div>
+          <div class="field"><label for="event-${index}-cost">Cost (USD)</label><input id="event-${index}-cost" name="events.${index}.cost_usd" type="number" min="0" step="0.01" required placeholder="0"></div>
+        </div>
+      </details>`;
+    }
+
+    function renderStart() {
+      return `<form id="setupForm">
+        <div class="form-toolbar">
+          <p>Enter your own information or start from the complete demo example.</p>
+          <div class="form-actions"><button class="secondary" id="clearSetupButton" type="button">Clear</button><button class="secondary" id="fillSetupButton" type="button">Fill example</button></div>
+        </div>
+        <section class="form-section">
+          <h2>Your profile</h2>
+          <div class="form-grid">
+            <div class="field"><label for="profile-id">User ID</label><input id="profile-id" name="profile.user_id" required placeholder="founder_001"></div>
+            <div class="field"><label for="profile-role">Role</label><input id="profile-role" name="profile.role" required placeholder="Technical founder"></div>
+            <div class="field"><label for="profile-location">Location</label><input id="profile-location" name="profile.location" required placeholder="San Francisco"></div>
+            <div class="field"><label for="profile-budget">Maximum event cost</label><input id="profile-budget" name="profile.max_cost_usd" type="number" min="0" step="0.01" required placeholder="100"></div>
+            <div class="field"><label for="profile-crowd">Preferred maximum crowd</label><input id="profile-crowd" name="profile.preferred_max_crowd_size" type="number" min="0" step="1" required placeholder="150"></div>
+            <div class="field"><label for="profile-themes">Preferred themes</label><input id="profile-themes" name="profile.themes" placeholder="AI agents, founders"><small>Separate with commas</small></div>
+            <div class="field full"><label for="profile-formats">Preferred formats</label><input id="profile-formats" name="profile.formats" placeholder="workshop, roundtable, hackathon"><small>Separate with commas</small></div>
+            <div class="field full"><label for="profile-outcomes">Desired outcomes</label><textarea id="profile-outcomes" name="profile.desired_outcomes" required placeholder="One desired outcome per line"></textarea></div>
+          </div>
+          <h2 style="margin-top:18px">Goal priorities</h2>
+          <div class="form-grid three">
+            <div class="field"><label for="goal-networking">Networking</label><input id="goal-networking" name="profile.networking" type="number" min="0" max="1" step="0.1" required placeholder="0.3"></div>
+            <div class="field"><label for="goal-knowledge">Knowledge</label><input id="goal-knowledge" name="profile.knowledge" type="number" min="0" max="1" step="0.1" required placeholder="0.3"></div>
+            <div class="field"><label for="goal-opportunity">Opportunity</label><input id="goal-opportunity" name="profile.opportunity" type="number" min="0" max="1" step="0.1" required placeholder="0.3"></div>
+          </div>
+        </section>
+        <section class="form-section">
+          <h2>Three events</h2>
+          ${[0, 1, 2].map(eventEditor).join("")}
+        </section>
+        <div class="form-submit"><span>All values stay in this local demo session.</span><button class="primary" id="saveSetupButton" type="button">Save and continue</button></div>
+      </form>`;
+    }
+
+    function renderProfile() {
+      const profile = obj(state.profile);
+      const goals = obj(profile.goal_priorities || profile.goal_weights);
+      return `<div>
+        <section class="profile">
+          <div><span class="pill">Demo profile</span><h2>${h(profile.role || profile.name)}</h2><p>${h(list(profile.desired_outcomes)[0])}</p></div>
+          <div class="goals">${["networking", "knowledge", "opportunity"].map((goal) => {
+            const percentage = Math.round((Number(goals[goal]) || 0) * 100);
+            return `<div class="goal"><span>${h(goal)}</span><span class="track"><span style="width:${Math.max(0, Math.min(100, percentage))}%"></span></span><strong>${percentage}%</strong></div>`;
+          }).join("")}</div>
+        </section>
+        <h2 class="section-title" style="margin-top:22px">Candidates</h2>
+        <div class="rows">${list(state.events).map((event) => `<div class="event-row">
+          <span class="rank">${h(String(event.format || "event").slice(0, 1).toUpperCase())}</span>
+          <span class="event-copy"><h3>${h(event.title)}</h3><p>${h(event.description)}</p></span>
+          <span class="pill ${h(mode(state.event_modes[event.event_id]))}">${h(state.event_modes[event.event_id])}</span>
+        </div>`).join("")}</div>
+        ${footer("All three sources remain visible in the ranking.", 2, "Rank events")}
+      </div>`;
+    }
+
+    function recommendationDetails(recommendation, event) {
+      const scores = obj(recommendation.scores);
+      const citation = list(recommendation.citations)[0] || {};
+      return `<details class="details"><summary>Why this score?</summary><div class="details-body">
+        <div class="score-grid">${[
+          ["Network", scores.networking], ["Knowledge", scores.knowledge],
+          ["Opportunity", scores.opportunity], ["Fit", scores.personal_fit], ["Friction", scores.friction]
+        ].map(([label, value]) => `<div class="score-item"><strong>${h(value)}</strong><span>${h(label)}</span></div>`).join("")}</div>
+        ${list(recommendation.reasons).map((reason) => `<p>• ${h(reason)}</p>`).join("")}
+        <p>Confidence ${Number(recommendation.confidence || 0).toFixed(2)} · scoring ${h(recommendation.scoring_version)} · ${h(state.event_modes[recommendation.event_id])}</p>
+        ${citation.url ? `<a href="${safeUrl(citation.url)}" target="_blank" rel="noreferrer">${h(citation.claim)} ↗</a>` : ""}
+      </div></details>`;
+    }
+
+    function renderRanking() {
+      const events = eventMap();
+      const selectedId = state.selected_event_id || list(state.initial_recommendations)[0]?.event_id;
+      const handoff = obj(state.handoff);
+      const band = obj(handoff.band);
+      const bandMode = mode(band.mode);
+      const transcript = list(band.transcript);
+      return `<div>
+        <div class="agent-line">
+          <span>Scout found 3 events</span><span>Analyst ranked them</span><span>Coach flagged one risk</span><span class="pill ${h(bandMode)}">Band ${h(bandMode)}</span>
+        </div>
+        <details class="details" ${bandMode === "connected" ? "open" : ""}><summary>Band agent collaboration evidence</summary><div class="details-body">
+          <p><strong>${h(band.status || "Band status unavailable")}</strong></p>
+          <p>Room: ${h(band.room_id || "not created")} · routing: ${h(band.routing || "@mention when connected")} · transport: ${h(band.transport || "direct-call fallback")}</p>
+          ${transcript.length ? transcript.map((item) => `<p>• ${h(item.from)} → ${h(item.to)} · ${h(item.stage)} · message ${h(item.message_id || "observed")}</p>`).join("") : "<p>No Band messages were claimed for this run.</p>"}
+        </div></details>
+        <div class="rows">${list(state.initial_recommendations).map((recommendation, index) => {
+          const event = events[recommendation.event_id] || {};
+          const selected = selectedId === recommendation.event_id;
+          return `<div>
+            <button class="event-row${selected ? " selected" : ""}" data-event-id="${h(recommendation.event_id)}" type="button">
+              <span class="rank">#${h(recommendation.rank || index + 1)}</span>
+              <span class="event-copy"><h3>${h(event.title || recommendation.event_id)}</h3><p>${h(list(recommendation.reasons)[0])}</p></span>
+              <span class="score">${h(obj(recommendation.scores).overall)}<small>${h(state.event_modes[recommendation.event_id])}</small></span>
+            </button>
+            ${recommendationDetails(recommendation, event)}
+          </div>`;
+        }).join("")}</div>
+        <p class="selected-note">Selected: ${h(events[selectedId]?.title || selectedId)}</p>
+        <details class="details"><summary>Coach's risk</summary><div class="details-body">${h(obj(state.coach || handoff.coach).critique)}</div></details>
+        ${footer("You can choose any event before continuing.", 3, "Create mission")}
+      </div>`;
+    }
+
+    function renderMission() {
+      const mission = obj(state.mission);
+      const selected = eventMap()[state.selected_event_id] || {};
+      return `<div>
+        <p class="selected-note" style="margin:0 0 14px">${h(selected.title || mission.event_id)}</p>
+        <div class="objective-grid">${list(mission.objectives).map((objective) => `<div class="objective">
+          <strong>${h(objective.target)}</strong><span>${h(String(objective.metric || "").replaceAll("_", " "))}</span>
+        </div>`).join("")}</div>
+        <details class="details"><summary>People, questions, and follow-up</summary><div class="details-body">
+          <p><strong>Target people:</strong> ${h(list(mission.target_people).join(" · "))}</p>
+          ${list(mission.questions_to_ask).map((question) => `<p>• ${h(question)}</p>`).join("")}
+          <p><strong>Follow-up:</strong> ${h(mission.follow_up_plan)}</p>
+        </div></details>
+        <details class="details"><summary>Exact grounded Markdown and citations</summary><div class="details-body"><pre>${h(state.mission_markdown)}</pre></div></details>
+        ${footer(`Publication: ${obj(state.publication).mode || "not requested"}`, 4, "Request playbook")}
+      </div>`;
+    }
+
+    function renderFeedbackEditor() {
+      const profile = obj(state.profile);
+      return `<form id="feedbackForm" class="form-section" style="margin-top:16px">
+        <div class="form-toolbar">
+          <div><h2 style="margin-bottom:4px">Event outcome</h2><p>Use the example outcome for the learning demo, or enter what actually happened.</p></div>
+          <div class="form-actions"><button class="secondary" id="clearFeedbackButton" type="button">Clear</button><button class="secondary" id="fillFeedbackButton" type="button">Fill example</button></div>
+        </div>
+        <div class="form-grid">
+          <div class="field"><label for="feedback-user">User ID</label><input id="feedback-user" name="feedback.user_id" required value="${h(profile.user_id || "")}"></div>
+          <div class="field"><label for="feedback-event">Attended event</label><select id="feedback-event" name="feedback.event_id" required><option value="">Choose…</option>${list(state.events).map((event) => `<option value="${h(event.event_id)}" ${event.event_id === state.selected_event_id ? "selected" : ""}>${h(event.title)}</option>`).join("")}</select></div>
+          <div class="field full"><label for="feedback-time">Submitted at</label><input id="feedback-time" name="feedback.submitted_at" required placeholder="2026-07-26T12:00:00-07:00"><small>ISO date-time with timezone</small></div>
+          ${[
+            ["meaningful_conversations", "Meaningful conversations", 0, ""],
+            ["contacts_exchanged", "Contacts exchanged", 0, ""],
+            ["followups_sent", "Follow-ups sent", 0, ""],
+            ["meetings_booked", "Meetings booked", 0, ""],
+            ["questions_answered", "Questions answered", 0, ""],
+            ["actionable_insights", "Actionable insights", 0, ""],
+            ["opportunities_created", "Opportunities created", 0, ""],
+            ["energy_after", "Energy after", 0, 10],
+            ["overall_value", "Overall value", 0, 10]
+          ].map(([name, label, min, max]) => `<div class="field"><label for="feedback-${h(name)}">${h(label)}</label><input id="feedback-${h(name)}" name="feedback.${h(name)}" type="number" min="${min}" ${max === "" ? "" : `max="${max}"`} step="1" required placeholder="0"></div>`).join("")}
+          <div class="field full"><label for="feedback-notes">Notes</label><textarea id="feedback-notes" name="feedback.free_text_feedback" placeholder="What worked, and what did not?"></textarea></div>
+        </div>
+        <div class="form-submit"><span>Saving creates one learning episode; its storage mode is reported after the write.</span><button class="primary" id="saveFeedbackButton" type="button">Save outcome</button></div>
+      </form>`;
+    }
+
+    function renderPlaybook() {
+      const publication = obj(state.publication);
+      const playbook = obj(state.playbook);
+      const payment = obj(playbook.payment);
+      const publicationMode = mode(publication.mode);
+      const playbookMode = mode(playbook.mode);
+      return `<div>
+        <div class="status-cards">
+          <section class="status-card"><div class="status-card-top"><h3>Mission publication</h3><span class="pill ${h(publicationMode)}">${h(publicationMode)}</span></div>
+            <p>${publicationMode === "connected" ? "Remote publication confirmed." : "A local preview is available. It is not presented as published."}</p>
+            ${publication.remote_url ? `<a href="${safeUrl(publication.remote_url)}" target="_blank" rel="noreferrer">Open publication ↗</a>` : ""}
+            ${publication.remote_id ? `<p>Remote ID: ${h(publication.remote_id)}</p>` : ""}
+          </section>
+          <section class="status-card"><div class="status-card-top"><h3>Detailed playbook</h3><span class="pill ${h(playbookMode)}">${h(playbookMode)}</span></div>
+            <p>${playbookMode === "connected" ? "The x402 testnet boundary responded." : "Payments are disabled. No transaction occurred."}</p>
+            ${payment.network ? `<p>Network: ${h(payment.network)}</p>` : ""}
+            ${payment.request_id ? `<p>Request ID: ${h(payment.request_id)}</p>` : ""}
+            ${payment.verification_id ? `<p>Verification ID: ${h(payment.verification_id)}</p>` : ""}
+            ${payment.transaction_id ? `<p>Transaction ID: ${h(payment.transaction_id)}</p>` : ""}
+            ${payment.payment_url ? `<a href="${safeUrl(payment.payment_url)}" target="_blank" rel="noreferrer">Inspect payment request ↗</a>` : ""}
+            ${payment.receipt_url ? `<a href="${safeUrl(payment.receipt_url)}" target="_blank" rel="noreferrer">Open receipt ↗</a>` : ""}
+          </section>
+        </div>
+        ${playbook.playbook ? `<details class="details"><summary>View demo playbook</summary><div class="details-body"><pre>${h(typeof playbook.playbook === "string" ? playbook.playbook : JSON.stringify(playbook.playbook, null, 2))}</pre></div></details>` : ""}
+        ${renderFeedbackEditor()}
+      </div>`;
+    }
+
+    function renderProspectEditor() {
+      return `<form id="prospectForm" class="form-section" style="margin-top:16px">
+        <div class="form-toolbar">
+          <div><h2 style="margin-bottom:4px">New live prospect</h2><p>Add an event the user has not attended. It replaces the attended event in the next three-event slate.</p></div>
+          <div class="form-actions"><button class="secondary" id="clearProspectButton" type="button">Clear</button><button class="secondary" id="fillProspectButton" type="button">Fill verified example</button></div>
+        </div>
+        <div class="form-grid">
+          <div class="field"><label>Data source</label><input value="Live" disabled><small>A new absolute source URL is required.</small></div>
+          <div class="field"><label for="prospect-id">Event ID</label><input id="prospect-id" name="prospect.event_id" required placeholder="evt_live_new_001"></div>
+          <div class="field full"><label for="prospect-title">Title</label><input id="prospect-title" name="prospect.title" required placeholder="New event name"></div>
+          <div class="field full"><label for="prospect-description">Description</label><textarea id="prospect-description" name="prospect.description" required placeholder="What happens at this new event?"></textarea></div>
+          <div class="field"><label for="prospect-source-url">Source URL</label><input id="prospect-source-url" name="prospect.source_url" type="url" required placeholder="https://luma.com/new-event"></div>
+          <div class="field"><label for="prospect-source-name">Source name</label><input id="prospect-source-name" name="prospect.source_name" required placeholder="Luma"></div>
+          <div class="field"><label for="prospect-start">Start time</label><input id="prospect-start" name="prospect.start_time" required placeholder="2026-08-27T09:00:00-07:00"><small>ISO date-time with timezone</small></div>
+          <div class="field"><label for="prospect-location">Location</label><input id="prospect-location" name="prospect.location" required placeholder="San Francisco"></div>
+          <div class="field"><label for="prospect-themes">Themes</label><input id="prospect-themes" name="prospect.themes" required placeholder="AI agents, founders"><small>Separate with commas</small></div>
+          <div class="field"><label for="prospect-format">Format</label><input id="prospect-format" name="prospect.format" required placeholder="conference"></div>
+          <div class="field"><label for="prospect-interaction">Interaction level</label><input id="prospect-interaction" name="prospect.interaction_level" type="number" min="0" max="1" step="0.01" required placeholder="0.8"></div>
+          <div class="field"><label for="prospect-depth">Knowledge depth</label><input id="prospect-depth" name="prospect.knowledge_depth" type="number" min="0" max="1" step="0.01" required placeholder="0.85"></div>
+          <div class="field"><label for="prospect-crowd">Estimated crowd</label><input id="prospect-crowd" name="prospect.estimated_crowd_size" type="number" min="0" step="1" placeholder="220"><small>Optional when unknown</small></div>
+          <div class="field"><label for="prospect-cost">Cost (USD)</label><input id="prospect-cost" name="prospect.cost_usd" type="number" min="0" step="0.01" required placeholder="349"></div>
+        </div>
+        <div class="form-submit"><span>The attended event is excluded; the other two candidates carry forward.</span><button class="primary" id="evaluateProspectButton" type="button">Evaluate next slate</button></div>
+      </form>`;
+    }
+
+    function renderFeedback() {
+      const episode = obj(state.episode);
+      const feedback = Object.keys(obj(episode.feedback)).length ? obj(episode.feedback) : obj(state.feedback_fixture);
+      const attended = eventMap()[episode.event_id] || {};
+      return `<div>
+        <section class="feedback">
+          <div><span class="pill connected">Episode saved</span><h2>${h(attended.title || episode.event_id)} recorded</h2><p>${h(feedback.free_text_feedback || "Outcome metrics were saved successfully.")}</p></div>
+          <div class="metrics">
+            <div class="metric"><strong>${h(feedback.meaningful_conversations)}</strong><span>conversations</span></div>
+            <div class="metric"><strong>${h(feedback.followups_sent)}</strong><span>follow-ups</span></div>
+            <div class="metric"><strong>${h(feedback.meetings_booked)}</strong><span>meetings</span></div>
+            <div class="metric"><strong>${h(episode.actual_event_success)}</strong><span>actual success</span></div>
+          </div>
+        </section>
+        <details class="details"><summary>Episode evidence</summary><div class="details-body">Episode ${h(episode.episode_id)} · ${h(episode.storage_mode || "not reported")} storage · next-slate ranking is now permitted.</div></details>
+        ${renderProspectEditor()}
+      </div>`;
+    }
+
+    function renderResult() {
+      const before = list(state.initial_recommendations);
+      const after = list(state.improved_recommendations);
+      const events = eventMap();
+      const beforeById = Object.fromEntries(before.map((item) => [item.event_id, item]));
+      const prospect = obj(state.prospective_event);
+      const prospectRecommendation = after.find((item) => item.event_id === prospect.event_id) || {};
+      const prospectRank = prospectRecommendation.rank || "—";
+      const episodeApplied = list(prospectRecommendation.influencing_episode_ids).length > 0;
+      const attendedId = obj(state.episode).event_id;
+      const attended = events[attendedId] || {};
+      return `<div>
+        <section class="result">
+          <div><span class="pill live">NEW · live</span><h2 style="margin-top:8px">${h(prospect.title || prospect.event_id)} ranks #${h(prospectRank)}</h2><p>${h(episodeApplied ? (list(prospectRecommendation.reasons)[0] || "The saved episode influenced this new event.") : "The event was evaluated after feedback. This run did not claim that the prior episode matched the new event.")}</p>${prospect.source_url ? `<a href="${safeUrl(prospect.source_url)}" target="_blank" rel="noreferrer">Open source ↗</a>` : ""}</div>
+          <div class="result-score">NEW → #${h(prospectRank)}</div>
+        </section>
+        <p class="selected-note">Attended event removed: ${h(attended.title || attendedId)}. Two unvisited events carried forward.</p>
+        <h2 class="section-title" style="margin-top:22px">Next three events</h2>
+        <div class="rows">${after.map((recommendation, index) => {
+          const prior = beforeById[recommendation.event_id] || {};
+          const isNew = recommendation.event_id === prospect.event_id;
+          const beforeScore = obj(prior.scores).overall;
+          const afterScore = obj(recommendation.scores).overall;
+          const delta = !isNew && Number.isFinite(Number(beforeScore))
+            ? Number(afterScore) - Number(beforeScore)
+            : null;
+          return `<div class="event-row">
+            <span class="rank">#${h(recommendation.rank || index + 1)}</span>
+            <span class="event-copy"><h3>${h(events[recommendation.event_id]?.title || recommendation.event_id)} ${isNew ? '<span class="pill live">NEW · live</span>' : ""}</h3><p>${isNew ? `New prospect · score ${h(afterScore)}` : `Rank ${h(prior.rank)} → ${h(recommendation.rank)} · score ${h(beforeScore)} → ${h(afterScore)}`}</p></span>
+            <span class="score${delta !== null && delta < 0 ? " delta" : ""}">${isNew ? h(afterScore) : `${delta > 0 ? "+" : ""}${h(delta)}`}<small>${list(recommendation.influencing_episode_ids).length ? "episode applied" : (isNew ? "new prospect" : "baseline")}</small></span>
+          </div>`;
+        }).join("")}</div>
+        <details class="details"><summary>Evidence and full next-event recommendations</summary><div class="details-body">
+          ${after.map((recommendation) => `<p><strong>${h(events[recommendation.event_id]?.title)}</strong> · ${h(obj(state.next_event_modes)[recommendation.event_id])}: ${h(list(recommendation.reasons).join(" "))} Influencing episodes: ${h(list(recommendation.influencing_episode_ids).join(", ") || "none")}.</p>`).join("")}
+        </div></details>
+        <div class="footer"><span class="footer-note">The final slate contains only future candidates; no before value was invented for the new event.</span><button class="primary" id="runAgainButton" type="button">Run again</button></div>
+      </div>`;
+    }
+
+    function render() {
+      if (!state) return;
+      const stage = Number(state.stage || 0);
+      const [label, title, subtitle] = stageText[stage];
+      document.getElementById("stageLabel").textContent = label;
+      document.getElementById("stageTitle").textContent = title;
+      document.getElementById("stageSubtitle").textContent = subtitle;
+      renderProgress();
+      renderStatus();
+      const views = [renderStart, renderProfile, renderRanking, renderMission, renderPlaybook, renderFeedback, renderResult];
+      document.getElementById("content").innerHTML = views[stage]();
+    }
+
+    document.addEventListener("click", (event) => {
+      const controlButton = event.target.closest("[data-control]");
+      if (controlButton) control(Number(controlButton.dataset.control));
+      const eventButton = event.target.closest("[data-event-id]");
+      if (eventButton) selectEvent(eventButton.dataset.eventId);
+      if (event.target.closest("#fillSetupButton")) fillSetupExamples();
+      if (event.target.closest("#clearSetupButton")) clearForm("setupForm");
+      if (event.target.closest("#saveSetupButton")) configureFromForm();
+      if (event.target.closest("#fillFeedbackButton")) fillFeedbackExamples();
+      if (event.target.closest("#clearFeedbackButton")) clearForm("feedbackForm");
+      if (event.target.closest("#saveFeedbackButton")) recordFeedbackFromForm();
+      if (event.target.closest("#fillProspectButton")) fillProspectExample();
+      if (event.target.closest("#clearProspectButton")) clearForm("prospectForm");
+      if (event.target.closest("#evaluateProspectButton")) evaluateProspectFromForm();
+      if (event.target.closest("#runAgainButton")) reset();
+    });
+    document.getElementById("resetButton").addEventListener("click", reset);
+    document.getElementById("runAllButton").addEventListener("click", runAll);
+    refresh().catch((error) => notify(error.message, true));
+  </script>
+</body>
+</html>

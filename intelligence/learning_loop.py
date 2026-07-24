@@ -21,7 +21,7 @@ from shared.contracts import (
     UserProfile,
 )
 
-from .actian_memory import ActianMemory
+from .actian_memory import EpisodeMemory, create_episode_memory
 from .scorer import overall_score, rank_events, score_event
 
 
@@ -65,7 +65,7 @@ def actual_event_success(actual_scores: dict[str, float]) -> int:
 
 
 class IntelligenceEngine:
-    def __init__(self, memory: ActianMemory) -> None:
+    def __init__(self, memory: EpisodeMemory) -> None:
         self.memory = memory
 
     def retrieve_similar_experiences(
@@ -84,7 +84,7 @@ class IntelligenceEngine:
         *,
         episode_id: str | None = None,
         observed_at: str | None = None,
-        storage_mode: str = "local_fallback",
+        storage_mode: str | None = None,
     ) -> EventEpisode:
         if not isinstance(profile, UserProfile):
             profile = UserProfile.from_dict(profile)
@@ -121,9 +121,9 @@ class IntelligenceEngine:
             actual_event_success=actual_event_success(actual_scores),
             scoring_version=SCORING_VERSION,
             observed_at=observed_at or datetime.now(timezone.utc).isoformat(),
-            storage_mode=storage_mode,
+            storage_mode=storage_mode or self.memory.storage_mode,
         )
-        self.memory.record(episode)
+        self.memory.record(episode, event)
         return episode
 
     def score_with_memory(
@@ -163,10 +163,29 @@ class IntelligenceEngine:
         )
         overall_delta = learned_overall - baseline.scores["overall"]
         evidence_summary = (
-            f"{len(similar)} recorded episode(s) for this event averaged "
+            f"{len(similar)} similar recorded event experience(s) averaged "
             f"{round(fmean(item.actual_event_success for item in similar))}/100 "
             "actual success."
         )
+        retrieval_evidence = self.memory.last_retrieval_evidence
+        if retrieval_evidence and any(
+            item.provider == "actian_vectorai"
+            for item in retrieval_evidence
+        ):
+            top_relevance = max(item.relevance for item in retrieval_evidence)
+            evidence_summary += (
+                " Actian semantic memory selected the same-user evidence "
+                f"(top relevance {top_relevance:.3f})."
+            )
+        elif retrieval_evidence and any(
+            item.provider == "local_json"
+            for item in retrieval_evidence
+        ):
+            top_relevance = max(item.relevance for item in retrieval_evidence)
+            evidence_summary += (
+                " Local deterministic structured-event similarity selected "
+                f"the same-user evidence (top relevance {top_relevance:.3f})."
+            )
         adjustments = [
             {
                 "component": dimension,
@@ -252,7 +271,7 @@ def default_engine() -> IntelligenceEngine:
         else Path(tempfile.gettempdir())
         / f"event-copilot-episodes-{os.getpid()}.json"
     )
-    return IntelligenceEngine(ActianMemory(fallback_path))
+    return IntelligenceEngine(create_episode_memory(fallback_path))
 
 
 def retrieve_similar_experiences(

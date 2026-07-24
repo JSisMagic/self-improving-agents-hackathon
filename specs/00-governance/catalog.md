@@ -36,6 +36,8 @@ requirements. The archive is preserved context, not implementation scope.
 | ADR-0002 | [Contract-first module ownership](../09-decisions/ADR-0002-contract-first-modules.md) | Accepted |
 | ADR-0003 | [Fast and slow learning loops](../09-decisions/ADR-0003-fast-and-slow-learning.md) | Accepted |
 | ADR-0004 | [Graceful degradation](../09-decisions/ADR-0004-graceful-degradation.md) | Accepted |
+| ADR-0005 | [Band-native agent collaboration](../09-decisions/ADR-0005-band-native-agent-collaboration.md) | Accepted |
+| ADR-0006 | [Actian semantic episode memory](../09-decisions/ADR-0006-actian-semantic-episode-memory.md) | Accepted |
 
 ## Non-normative archive
 

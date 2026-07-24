@@ -15,9 +15,9 @@ Owner: Team
 | [`step1.md`](../../step1.md) | Shared event, recommendation, and feedback contracts | DAT-001 |
 | [`step1.md`](../../step1.md) | Outcome score weights and networking proxy | MET-001 |
 | [`work-divide.md`](../../work-divide.md) | Stable two-person module ownership | ADR-0002, DEL-001 |
-| [`work-divide.md`](../../work-divide.md) | Pioneer, Actian, and Band options | Deferred archive; not a hackathon gate |
-| [`work-divide.md`](../../work-divide.md) | Scout, Analyst, and Coach handoffs | PRD-001, WFL-001 |
-| [`work-divide.md`](../../work-divide.md) | Before/after ranking change | PRD-001, WFL-001, TST-006 |
+| [`work-divide.md`](../../work-divide.md) | Pioneer and Actian options | Pioneer deferred; Actian governed by ADR-0006, INT-005, and TST-006 |
+| [`work-divide.md`](../../work-divide.md) | Band-coordinated Scout, Analyst, and Coach handoffs | ADR-0005, PRD-001, WFL-001, INT-001 |
+| [`work-divide.md`](../../work-divide.md) | Outcome evidence changes the next ranking | PRD-001, WFL-001, TST-006 |
 | [`work-divide.md`](../../work-divide.md) | Fallbacks and truthful status panel | PRD-001, INT-001, SEC-001, TST-003 |
 | [`work-divide.md`](../../work-divide.md) | Demo sequence and freeze rules | WFL-001, DEL-001 |
 
@@ -29,7 +29,7 @@ Owner: Team
 | `MET-001..009` | Deterministic scoring check and TST-002, TST-006 |
 | `DAT-001..010` | Schema validation exercised by TST-001 through TST-004 |
 | `WFL-001..007` | One end-to-end smoke run and TST-006 |
-| `INT-001`, `INT-007`, `INT-008`, `INT-010` | TST-003 and TST-005 |
+| `INT-001`, `INT-005`, `INT-006`, `INT-007`, `INT-008`, `INT-010` | TST-002, TST-003, TST-005, and TST-006 |
 | `SEC-001`, `SEC-003`, `SEC-006`, `SEC-010` | Pre-demo checks and TST-005 |
 | `DEL-001..010` | Build checkpoints and rehearsal |
 | `TST-001..006` | Recorded acceptance evidence |

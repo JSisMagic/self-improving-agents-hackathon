@@ -1,7 +1,8 @@
 # Gergana's intelligence module
 
 This module owns event normalization, deterministic baseline scoring, feedback
-ingestion, local episode storage, and memory-informed reranking.
+ingestion, connected Actian or local-fallback episode storage, and
+memory-informed reranking.
 
 ## Run the learning-loop demo
 
@@ -12,8 +13,9 @@ python3 -m intelligence.demo
 ```
 
 The command loads the three canonical candidates, writes the deliberate mixer
-feedback to a temporary local episode store, and then reranks the same three
-candidates. The mixer starts first and the workshop overtakes it.
+feedback to the configured episode store, and then reranks the same three
+candidates. Actian is opt-in; without its environment flag this remains a
+temporary local JSON run. The mixer starts first and the workshop overtakes it.
 
 ## Refresh product-facing fixtures
 
@@ -30,12 +32,28 @@ legacy `actian_memories.json` fixture to an empty list. Runtime episodes use a
 process-local temporary JSON file by default or `EVENT_COPILOT_EPISODES_PATH`
 when explicitly configured.
 
-## Deferred-service boundaries
+## Connected Actian memory
+
+Install the optional dependencies and start the repository's VectorAI DB
+container as described in the root README. Then export
+`ACTIAN_VECTORAI_ENABLED=true` before running this module or the product UI.
+
+The connected backend embeds a stable Event fingerprint with
+`sentence-transformers/all-MiniLM-L6-v2`, writes the complete EventEpisode as
+Actian payload, and searches same-user memories using vector similarity.
+Actian selects the relevant episodes; the accepted scoring-version-1 formulas
+remain deterministic. Successful connected writes are mirrored to the
+session-local JSON store so a later provider error can degrade truthfully.
+
+`ActianMemory` remains a compatibility name for the local JSON backend.
+`ActianVectorMemory` is the connected backend, and `create_episode_memory()`
+selects the configured path.
+
+## Other service boundaries
 
 `PioneerClient` reads `PIONEER_API_URL` and `PIONEER_API_KEY` when configured and
 falls back to `shared/pioneer_extractions.json`. Pioneer is not used by the
-release-gate path. `ActianMemory` is a historical class name for a local JSON
-store; it reports `local_fallback` and does not claim an Actian connection.
+release-gate path.
 
 ## Run tests
 

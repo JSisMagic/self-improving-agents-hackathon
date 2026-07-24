@@ -13,9 +13,9 @@ Owner: Team
 | Event Mission | A short, measurable attendance plan produced for a selected event. |
 | Fast loop | Immediate memory update and reranking after feedback. |
 | Grounded | Derived from a named source and preserving claim-level citation links. |
-| Learning delta | The before/after change in rank or score attributable to recorded evidence. |
+| Learning delta | The difference between a new event's baseline and memory-adjusted score attributable to recorded evidence. |
 | Payment rail | x402 or another explicitly selected agent-compatible payment mechanism. |
 | Pioneer | Deferred post-hackathon option for event extraction or slower model evaluation. |
-| Actian | Deferred post-hackathon option for durable event-episode memory and retrieval. |
-| Band | Deferred post-hackathon option for Scout, Analyst, and Coach coordination. |
+| Actian | Connected VectorAI DB backend for durable EventEpisode storage and same-user semantic retrieval, with a labeled local fallback. |
+| Band | Connected room, identity, targeted-routing, and audit layer for the Coordinator, Scout, Analyst, and Coach agents. |
 | Slow loop | Deferred periodic evaluation or model improvement using verified accumulated outcomes. |

@@ -8,7 +8,7 @@ from pathlib import Path
 
 from shared.contracts import Event, EventFeedback, UserProfile
 
-from .actian_memory import ActianMemory
+from .actian_memory import create_episode_memory
 from .learning_loop import IntelligenceEngine
 from .scorer import rank_events
 
@@ -47,9 +47,8 @@ def main() -> None:
     )
 
     with tempfile.TemporaryDirectory() as directory:
-        engine = IntelligenceEngine(
-            ActianMemory(Path(directory) / "episodes.json")
-        )
+        memory = create_episode_memory(Path(directory) / "episodes.json")
+        engine = IntelligenceEngine(memory)
         episode = engine.record_event_outcome(
             profile,
             mixer,
@@ -102,6 +101,7 @@ def main() -> None:
             f"score {workshop_after.scores['overall']}"
         )
         print(mixer_after.reasons[0])
+        memory.close()
 
 
 if __name__ == "__main__":

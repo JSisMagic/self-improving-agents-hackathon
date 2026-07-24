@@ -1,0 +1,2 @@
+# Optional connected orchestration runtime. The base app remains dependency-free.
+band-sdk==1.4.2

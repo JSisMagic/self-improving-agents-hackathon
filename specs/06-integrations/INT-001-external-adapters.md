@@ -5,10 +5,11 @@ Owner: Product
 
 ## Scope
 
-Only cited.md publication and an x402 testnet payment boundary are required
-external actions for the hackathon build. Pioneer, Actian, Band, generalized
-provider probes, and slow-loop jobs are deferred. The core recommendation and
-reranking path must remain directly callable with local data.
+Actian semantic episode memory, Band coordination, cited.md publication, and an
+x402 testnet payment boundary are the connected integrations for the hackathon
+build. Pioneer, generalized provider probes, and slow-loop jobs are deferred.
+The core recommendation and reranking path must remain directly callable with
+local data.
 
 ## Requirements
 
@@ -17,6 +18,44 @@ reranking path must remain directly callable with local data.
 Each external action shall return `provider`, `status`, `mode`, a payload or
 sanitized error, and a timestamp. Supported modes are `connected`,
 `demo_fallback`, `disabled`, and `error`.
+
+### INT-005 Actian semantic episode memory
+
+The connected memory backend shall store each schema-valid EventEpisode in
+Actian VectorAI DB as payload beside an embedding of stable Event features. It
+shall retrieve the most relevant episodes by vector similarity while applying
+server-side `user_id` and `schema_version` filters. Retrieval provenance shall
+retain episode IDs, relevance values, provider, storage mode, and a concise
+reason.
+
+The accepted scoring-version-1 calculation shall use Actian to select evidence
+but shall not weight outcomes by similarity. Missing configuration,
+dependencies, embedding model, health, timeout, or provider success shall use
+the local JSON backend with deterministic structured-event similarity and
+report `demo_fallback`. Provider-private retrieval metadata may be stored
+beside the unchanged EventEpisode JSON. `storage_mode: "live"` may be claimed
+only after a successful Actian upsert.
+
+### INT-006 Band agent collaboration
+
+Four independently authenticated Band agents shall participate in each
+connected recommendation run: an Event Copilot coordinator plus Scout,
+Analyst, and Coach specialists. The coordinator shall create a Band room,
+recruit the three specialists, and start the run by mentioning Scout. Each
+specialist shall receive only messages that mention it and shall hand work to
+the next role through a Band message with the same `run_id`.
+
+Band supplies persistent agent identity, room membership, targeted routing,
+WebSocket delivery, processing state, and the inspectable room transcript. It
+shall not implement event validation, scoring, critique rules, or mission
+validation; connected agents shall call the same local role functions as the
+fallback path.
+
+A connected result shall expose the Band room ID plus non-secret message
+provenance. A run may be labeled `connected` only after the Coach result is
+received by the coordinator through Band. Missing configuration, SDK failure,
+timeout, or provider error shall activate the direct-call fallback and shall
+not be presented as Band success.
 
 ### INT-007 cited.md publication
 
@@ -39,16 +78,19 @@ secret values.
 ## Minimal interfaces
 
 ```python
+create_episode_memory(fallback_path) -> EpisodeMemory
+record(episode, event) -> None
+retrieve_similar(user_id, event, limit) -> list[EventEpisode]
+coordinate_agents(profile, events, run_id) -> AgentCoordinationResult
 publish_markdown(markdown) -> PublicationResult
 authorize_playbook(request) -> PaymentDecision
 ```
 
-Provider-specific code stays behind these two functions. The UI consumes only
+Provider-specific code stays behind these boundaries. The UI consumes only
 their normalized results and displays the actual mode.
 
 ## Deferred integrations
 
-Pioneer extraction or evaluation, Actian memory, and Band orchestration may be
-added only after TST-001 through TST-006 pass. Their earlier generalized
-adapter contract is retained in the
+Pioneer extraction or evaluation may be added only after TST-001 through
+TST-006 pass. Its earlier generalized adapter contract is retained in the
 [dated archive](../archive/2026-07-24-deferred/INT-001-full-external-adapters.md).

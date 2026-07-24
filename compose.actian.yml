@@ -1,0 +1,16 @@
+services:
+  vectorai:
+    image: actian/vectorai:latest
+    container_name: event-copilot-vectorai
+    environment:
+      ACTIAN_VECTORAI_ACCEPT_EULA: "YES"
+    ports:
+      - "6573:6573"
+      - "6574:6574"
+      - "6575:6575"
+    volumes:
+      - actian-vectorai-data:/var/lib/actian-vectorai
+    restart: unless-stopped
+
+volumes:
+  actian-vectorai-data:
