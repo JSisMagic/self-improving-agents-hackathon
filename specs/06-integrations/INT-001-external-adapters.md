@@ -7,9 +7,10 @@ Owner: Product
 
 Actian semantic episode memory, Band coordination, cited.md publication, and an
 x402 testnet payment boundary are the connected integrations for the hackathon
-build. Pioneer, generalized provider probes, and slow-loop jobs are deferred.
-The core recommendation and reranking path must remain directly callable with
-local data.
+build. Senso live-source ingestion is an optional candidate-grounding input
+added by ADR-0007; it does not replace either challenge action. Pioneer,
+generalized provider probes, and slow-loop jobs are deferred. The core
+recommendation and reranking path must remain directly callable with local data.
 
 ## Requirements
 
@@ -75,6 +76,16 @@ Credentials shall come from environment variables. Results, logs, screenshots,
 and errors shall omit keys, payment tokens, provider request bodies, and other
 secret values.
 
+### INT-011 Senso live event grounding
+
+When live source URLs are supplied, the intelligence boundary shall fetch each
+page at request time, extract schema.org Event data into the frozen Event
+contract, and preserve the page URL as grounding. When `SENSO_API_KEY` is
+configured, the fetched source snapshot shall be uploaded and compiled through
+Senso before the adapter reports `connected`. Without Senso credentials, a
+successful direct crawl may be returned as `demo_fallback`, but shall not be
+presented as connected Senso behavior.
+
 ## Minimal interfaces
 
 ```python
@@ -88,6 +99,16 @@ authorize_playbook(request) -> PaymentDecision
 
 Provider-specific code stays behind these boundaries. The UI consumes only
 their normalized results and displays the actual mode.
+
+The optional live candidate input uses:
+
+```python
+crawl_events(urls) -> EventCrawlResult
+```
+
+Senso remains the grounded context and ingestion layer. Fetching and parsing the
+event pages is a separate bounded crawler step, matching Senso's documented
+source-ingestion model.
 
 ## Deferred integrations
 

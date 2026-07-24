@@ -145,3 +145,28 @@ The default run reports episode storage as `local_fallback`, Band and cited.md
 as fallback/disabled, and x402 as `disabled`. A connected final run requires a
 healthy Actian instance, Band credentials, explicitly injected cited.md and
 x402 testnet adapters, and inspectable provider evidence.
+
+## Crawl current event pages with Senso grounding
+
+The live-source adapter fetches explicitly supplied event pages on demand,
+extracts server-rendered schema.org `Event` JSON-LD, and emits frozen-contract
+Event records:
+
+```bash
+python3 -m intelligence.senso_client \
+  https://example.org/current-event \
+  --output /tmp/current-events.json
+```
+
+Set `SENSO_API_KEY` to upload and compile each fetched source snapshot in Senso:
+
+```bash
+export SENSO_API_KEY="..."
+python3 -m intelligence.senso_client https://example.org/current-event
+```
+
+Without the key, current pages are still fetched and labeled `live`, while the
+Senso integration result is truthfully `demo_fallback`. Senso is the grounding
+and ingestion layer; page retrieval is kept as a separate bounded crawler step.
+Pages that expose event data only after JavaScript execution are not supported
+by this dependency-free adapter.

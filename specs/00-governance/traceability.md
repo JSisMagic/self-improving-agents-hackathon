@@ -29,7 +29,7 @@ Owner: Team
 | `MET-001..009` | Deterministic scoring check and TST-002, TST-006 |
 | `DAT-001..010` | Schema validation exercised by TST-001 through TST-004 |
 | `WFL-001..007` | One end-to-end smoke run and TST-006 |
-| `INT-001`, `INT-005`, `INT-006`, `INT-007`, `INT-008`, `INT-010` | TST-002, TST-003, TST-005, and TST-006 |
+| `INT-001`, `INT-005`, `INT-006`, `INT-007`, `INT-008`, `INT-010`, `INT-011` | TST-002, TST-003, TST-005, TST-006, and Senso adapter tests |
 | `SEC-001`, `SEC-003`, `SEC-006`, `SEC-010` | Pre-demo checks and TST-005 |
 | `DEL-001..010` | Build checkpoints and rehearsal |
 | `TST-001..006` | Recorded acceptance evidence |

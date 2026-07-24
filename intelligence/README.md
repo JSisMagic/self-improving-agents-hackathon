@@ -49,6 +49,27 @@ session-local JSON store so a later provider error can degrade truthfully.
 `ActianVectorMemory` is the connected backend, and `create_episode_memory()`
 selects the configured path.
 
+## Live Senso-grounded event crawling
+
+`SensoClient.crawl_events(urls)` fetches explicitly supplied public event pages
+at call time and extracts schema.org Event JSON-LD into the shared Event
+contract. With `SENSO_API_KEY`, it uploads the fetched Markdown snapshot through
+Senso's knowledge-base API and waits until compilation completes before
+reporting `connected`. Without the key, the crawl can still return current
+`data_mode: live` records, but the Senso integration reports `demo_fallback`.
+
+Run it with:
+
+```bash
+python3 -m intelligence.senso_client https://example.org/current-event
+```
+
+Optional configuration:
+
+- `SENSO_API_KEY`: Senso API credential.
+- `SENSO_API_URL`: API base URL; defaults to
+  `https://apiv2.senso.ai/api/v1`.
+
 ## Other service boundaries
 
 `PioneerClient` reads `PIONEER_API_URL` and `PIONEER_API_KEY` when configured and

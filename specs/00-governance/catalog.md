@@ -38,6 +38,7 @@ requirements. The archive is preserved context, not implementation scope.
 | ADR-0004 | [Graceful degradation](../09-decisions/ADR-0004-graceful-degradation.md) | Accepted |
 | ADR-0005 | [Band-native agent collaboration](../09-decisions/ADR-0005-band-native-agent-collaboration.md) | Accepted |
 | ADR-0006 | [Actian semantic episode memory](../09-decisions/ADR-0006-actian-semantic-episode-memory.md) | Accepted |
+| ADR-0007 | [Senso live event grounding](../09-decisions/ADR-0007-senso-live-event-grounding.md) | Accepted |
 
 ## Non-normative archive
 
