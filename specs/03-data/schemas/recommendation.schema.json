@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://event-copilot.local/schemas/recommendation.schema.json",
+  "title": "Recommendation",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "event_id",
+    "rank",
+    "scores",
+    "reasons",
+    "influencing_episode_ids",
+    "confidence",
+    "citations",
+    "scoring_version"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "run_id": { "type": "string", "minLength": 1 },
+    "event_id": { "type": "string", "minLength": 1 },
+    "rank": { "type": "integer", "minimum": 1 },
+    "scores": {
+      "type": "object",
+      "required": [
+        "networking",
+        "knowledge",
+        "opportunity",
+        "personal_fit",
+        "friction",
+        "overall"
+      ],
+      "properties": {
+        "networking": { "$ref": "#/$defs/score" },
+        "knowledge": { "$ref": "#/$defs/score" },
+        "opportunity": { "$ref": "#/$defs/score" },
+        "personal_fit": { "$ref": "#/$defs/score" },
+        "friction": { "$ref": "#/$defs/score" },
+        "overall": { "$ref": "#/$defs/score" }
+      },
+      "additionalProperties": false
+    },
+    "reasons": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "influencing_episode_ids": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "citations": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/citation" }
+    },
+    "scoring_version": { "type": "string", "minLength": 1 },
+    "adjustments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["component", "delta", "evidence_summary"],
+        "properties": {
+          "component": {
+            "enum": ["networking", "knowledge", "opportunity", "personal_fit", "friction"]
+          },
+          "delta": { "type": "number" },
+          "evidence_summary": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "score": { "type": "number", "minimum": 0, "maximum": 100 },
+    "citation": {
+      "type": "object",
+      "required": ["claim", "url"],
+      "properties": {
+        "claim": { "type": "string", "minLength": 1 },
+        "url": { "type": "string", "format": "uri" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://event-copilot.local/schemas/feedback.schema.json",
+  "title": "EventFeedback",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "user_id",
+    "event_id",
+    "submitted_at",
+    "meaningful_conversations",
+    "contacts_exchanged",
+    "followups_sent",
+    "meetings_booked",
+    "questions_answered",
+    "actionable_insights",
+    "opportunities_created",
+    "energy_after",
+    "overall_value"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "user_id": { "type": "string", "minLength": 1 },
+    "event_id": { "type": "string", "minLength": 1 },
+    "submitted_at": { "type": "string", "format": "date-time" },
+    "meaningful_conversations": { "$ref": "#/$defs/nonnegativeInteger" },
+    "contacts_exchanged": { "$ref": "#/$defs/nonnegativeInteger" },
+    "followups_sent": { "$ref": "#/$defs/nonnegativeInteger" },
+    "meetings_booked": { "$ref": "#/$defs/nonnegativeInteger" },
+    "questions_answered": { "$ref": "#/$defs/nonnegativeInteger" },
+    "actionable_insights": { "$ref": "#/$defs/nonnegativeInteger" },
+    "opportunities_created": { "$ref": "#/$defs/nonnegativeInteger" },
+    "energy_after": { "type": "integer", "minimum": 0, "maximum": 10 },
+    "overall_value": { "type": "integer", "minimum": 0, "maximum": 10 },
+    "free_text_feedback": { "type": "string", "default": "" }
+  },
+  "$defs": {
+    "nonnegativeInteger": { "type": "integer", "minimum": 0 }
+  }
+}

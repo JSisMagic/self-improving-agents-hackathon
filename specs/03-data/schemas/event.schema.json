@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://event-copilot.local/schemas/event.schema.json",
+  "title": "Event",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "data_mode",
+    "event_id",
+    "title",
+    "description",
+    "source_url",
+    "source_name",
+    "start_time",
+    "location",
+    "themes",
+    "format",
+    "interaction_level",
+    "knowledge_depth",
+    "cost_usd"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "data_mode": { "enum": ["live", "fixture"] },
+    "event_id": { "type": "string", "minLength": 1 },
+    "title": { "type": "string", "minLength": 1 },
+    "description": { "type": "string", "minLength": 1 },
+    "source_url": { "type": "string", "format": "uri" },
+    "source_name": { "type": "string", "minLength": 1 },
+    "start_time": { "type": "string", "format": "date-time" },
+    "location": { "type": "string", "minLength": 1 },
+    "themes": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "format": { "type": "string", "minLength": 1 },
+    "interaction_level": { "type": "number", "minimum": 0, "maximum": 1 },
+    "knowledge_depth": { "type": "number", "minimum": 0, "maximum": 1 },
+    "estimated_crowd_size": { "type": ["integer", "null"], "minimum": 0 },
+    "cost_usd": { "type": "number", "minimum": 0 }
+  }
+}

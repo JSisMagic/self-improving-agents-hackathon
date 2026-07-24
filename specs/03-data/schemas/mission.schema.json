@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://event-copilot.local/schemas/mission.schema.json",
+  "title": "EventMission",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "mission_id",
+    "user_id",
+    "event_id",
+    "recommendation_run_id",
+    "objectives",
+    "target_people",
+    "questions_to_ask",
+    "follow_up_plan",
+    "citations",
+    "created_at"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "mission_id": { "type": "string", "minLength": 1 },
+    "user_id": { "type": "string", "minLength": 1 },
+    "event_id": { "type": "string", "minLength": 1 },
+    "recommendation_run_id": { "type": "string", "minLength": 1 },
+    "objectives": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["metric", "target", "rationale"],
+        "properties": {
+          "metric": { "type": "string", "minLength": 1 },
+          "target": { "type": "number", "minimum": 0 },
+          "rationale": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "target_people": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "questions_to_ask": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "follow_up_plan": { "type": "string", "minLength": 1 },
+    "citations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["claim", "url"],
+        "properties": {
+          "claim": { "type": "string", "minLength": 1 },
+          "url": { "type": "string", "format": "uri" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "created_at": { "type": "string", "format": "date-time" }
+  }
+}

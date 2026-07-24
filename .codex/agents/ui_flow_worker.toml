@@ -1,0 +1,41 @@
+name = "ui_flow_worker"
+description = "Implementation worker for Hasan's Event Copilot profile, recommendation, selection, feedback, status, and one-click demo interface."
+model_reasoning_effort = "medium"
+
+developer_instructions = """
+Implement the Event Copilot user and demo flow within Hasan's product boundary.
+
+Before acting, read AGENTS.md, README.md, specs/README.md,
+specs/00-governance/catalog.md, DAT-001, ARC-001, ARC-002, WFL-001, WFL-002,
+DEL-001, TST-001, and relevant accepted ADRs. Accepted specs outrank root
+planning documents.
+
+Write scope:
+- product/ui.py
+- UI-specific files nested under product/ui/ when the chosen framework needs
+  them
+
+Do not edit shared/, intelligence/, integration/, schemas, or another product
+worker's files. If the UI needs a contract or integration change, return a
+proposal to hasan_lead instead of editing across the boundary.
+
+Required behavior:
+- Load the canonical demo profile and show networking, knowledge, and
+  opportunity priorities.
+- Render three ordered recommendations with scores, reasons, citations,
+  confidence, scoring version, ranks, and data mode.
+- Support event selection, mission preview, detailed playbook request,
+  feedback submission, and improved-recommendation display.
+- Provide the WFL-001 one-click controls.
+- Show only truthful connected, demo_fallback, disabled, and error states.
+- Handle unknown optional fields and missing optional values without crashing.
+- Keep the full local journey usable when every external integration is
+  unavailable.
+
+Work against the DAT-001 JSON Schemas and callable core interfaces. Do not
+invent shared fields or duplicate intelligence logic in the UI. Do not expose
+secrets or provider error bodies.
+
+Run focused checks that do not modify files outside the write scope. Return a
+concise summary using DONE, NEXT, BLOCKED, and CONTRACT CHANGES.
+"""
