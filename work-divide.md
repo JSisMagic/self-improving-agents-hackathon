@@ -8,7 +8,7 @@ Both work against a shared JSON contract agreed in the first 15 minutes. That pr
 
 # Team roles
 
-## Person 1 — Intelligence & Learning Lead
+## Gergana — Intelligence & Learning Lead
 
 Owns:
 
@@ -30,7 +30,7 @@ Raw event page
 → memory-informed reranking
 ```
 
-## Person 2 — Product, Agents & Actions Lead
+## Hasan — Product, Agents & Actions Lead
 
 Owns:
 
@@ -153,7 +153,7 @@ conference-connector/
 │   ├── sample_profile.json
 │   └── sample_feedback.json
 │
-├── intelligence/                 # Person 1 owns
+├── intelligence/                 # Gergana owns
 │   ├── event_extractor.py
 │   ├── pioneer_client.py
 │   ├── actian_memory.py
@@ -161,7 +161,7 @@ conference-connector/
 │   ├── learning_loop.py
 │   └── seed_episodes.py
 │
-├── product/                      # Person 2 owns
+├── product/                      # Hasan owns
 │   ├── band_agents.py
 │   ├── event_mission.py
 │   ├── cited_publisher.py
@@ -183,8 +183,8 @@ conference-connector/
 
 ### Ownership rule
 
-* Person 1 edits `intelligence/`.
-* Person 2 edits `product/`.
+* Gergana edits `intelligence/`.
+* Hasan edits `product/`.
 * Either may edit `integration/`, but only while pairing or after announcing it.
 * Changes to `shared/` require agreement.
 * Never both edit the same file at the same time.
@@ -242,7 +242,7 @@ Do not spend time perfecting the scoring mathematics. The goal is to make measur
 
 ## 12:45–1:25 — Parallel build phase 1: working vertical slice
 
-### Person 1: local intelligence pipeline
+### Gergana: local intelligence pipeline
 
 Tasks:
 
@@ -264,7 +264,7 @@ recommendations = rank_events(
 
 The function must work without Pioneer by using cached sample outputs.
 
-### Person 2: product shell
+### Hasan: product shell
 
 Tasks:
 
@@ -285,7 +285,7 @@ Load demo profile
 → submit feedback
 ```
 
-Person 2 does **not** wait for Person 1's scoring code. Both implementations target the agreed JSON contract.
+Hasan does **not** wait for Gergana's scoring code. Both implementations target the agreed JSON contract.
 
 ---
 
@@ -294,8 +294,8 @@ Person 2 does **not** wait for Person 1's scoring code. Both implementations tar
 Pair together and connect:
 
 ```text
-Person 1 rank_events()
-→ Person 2 recommendation UI
+Gergana rank_events()
+→ Hasan recommendation UI
 ```
 
 Test one event first, then all three.
@@ -320,7 +320,7 @@ This is the fallback demo if later integrations fail.
 
 ## 1:40–2:20 — Parallel build phase 2: self-improvement and agents
 
-### Person 1: Actian memory and evolution
+### Gergana: Actian memory and evolution
 
 Tasks:
 
@@ -366,7 +366,7 @@ Prepare one deliberate learning example:
 
 That visible ranking change is the heart of the pitch. If Actian is unavailable, use seeded local memories and label the status as `demo fallback`.
 
-### Person 2: Band coordination and measurable mission
+### Hasan: Band coordination and measurable mission
 
 Create three agents:
 
@@ -448,7 +448,7 @@ Do not continue until this path works locally.
 
 ## 2:35–3:05 — Parallel build phase 3: publish, transact and slow loop
 
-### Person 1: Pioneer slow loop and evaluation
+### Gergana: Pioneer slow loop and evaluation
 
 Build only the credible minimum:
 
@@ -464,7 +464,7 @@ The demo explanation is:
 
 A running Pioneer job is enough when the real-time memory loop already works.
 
-### Person 2: cited.md and payment action
+### Hasan: cited.md and payment action
 
 Tasks:
 
@@ -533,7 +533,7 @@ Anything that does not serve this sequence is cut.
 
 ## 3:20–3:35 — Reliability and fallback work
 
-### Person 1
+### Gergana
 
 Prepare:
 
@@ -561,7 +561,7 @@ except Exception:
     memories = load_seeded_memories()
 ```
 
-### Person 2
+### Hasan
 
 Add one-click demo controls:
 
@@ -589,7 +589,7 @@ Only display statuses that reflect reality.
 
 Run the demo twice without editing code.
 
-### Person 2 opens and demonstrates the product
+### Hasan opens and demonstrates the product
 
 > “Event platforms optimize for clicks and registrations. We optimize for whether attending the event actually produced knowledge, relationships and opportunities.”
 
@@ -601,7 +601,7 @@ Cover:
 * cited.md publication
 * x402 monetization
 
-### Person 1 demonstrates and explains learning
+### Gergana demonstrates and explains learning
 
 > “The agent initially recommends this large mixer. Actian then retrieves previous experiences showing high conversation counts and zero follow-up meetings, so the agent promotes this smaller workshop.”
 
@@ -613,7 +613,7 @@ Cover:
 * Immediate feedback loop
 * Pioneer slow improvement loop
 
-### Person 2 closes with the real-world action
+### Hasan closes with the real-world action
 
 > “The system creates a measurable attendance mission, publishes a grounded report and offers a detailed success playbook through an agent payment rail.”
 
@@ -658,13 +658,13 @@ intelligence
 product
 ```
 
-Person 1 works only on:
+Gergana works only on:
 
 ```bash
 git checkout intelligence
 ```
 
-Person 2 works only on:
+Hasan works only on:
 
 ```bash
 git checkout product
