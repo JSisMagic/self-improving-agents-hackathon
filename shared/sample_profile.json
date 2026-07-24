@@ -1,0 +1,15 @@
+{
+  "user_id": "demo_gergana",
+  "name": "Gergana",
+  "location": "San Francisco",
+  "interests": ["AI agents", "founders", "CTO leadership"],
+  "goal_weights": {
+    "networking": 0.30,
+    "knowledge": 0.30,
+    "opportunity": 0.30,
+    "personal_fit": 0.10
+  },
+  "preferred_formats": ["workshop", "roundtable", "hackathon"],
+  "max_cost_usd": 100,
+  "preferred_max_crowd_size": 150
+}

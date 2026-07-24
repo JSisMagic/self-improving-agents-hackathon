@@ -1,0 +1,13 @@
+{
+  "event_id": "evt_001",
+  "meaningful_conversations": 7,
+  "contacts_exchanged": 6,
+  "followups_sent": 0,
+  "meetings_booked": 0,
+  "questions_answered": 1,
+  "actionable_insights": 1,
+  "opportunities_created": 0,
+  "energy_after": 4,
+  "overall_value": 5,
+  "free_text_feedback": "Many conversations, but none turned into a useful follow-up. Smaller participatory events work better."
+}

@@ -1,0 +1,244 @@
+[
+  {
+    "event_id": "evt_002",
+    "scores": {
+      "networking": 82,
+      "knowledge": 97,
+      "opportunity": 74,
+      "personal_fit": 96,
+      "friction": 0,
+      "overall": 93
+    },
+    "reasons": [
+      "Memory increased the score from 80 to 93.",
+      "4 similar past event(s) averaged 96/100 measured success.",
+      "The event's strongest predicted outcome is personal_fit (100/100).",
+      "It matches 100% of the demo user's priority themes."
+    ],
+    "similar_past_events": [
+      "episode_004",
+      "episode_005",
+      "episode_006",
+      "episode_007"
+    ],
+    "confidence": 0.9199999999999999,
+    "citations": [
+      {
+        "claim": "A small hands-on workshop for designing agent memory and feedback loops.",
+        "url": "https://example.com/events/agent-workshop"
+      }
+    ]
+  },
+  {
+    "event_id": "evt_003",
+    "scores": {
+      "networking": 85,
+      "knowledge": 90,
+      "opportunity": 75,
+      "personal_fit": 96,
+      "friction": 0,
+      "overall": 92
+    },
+    "reasons": [
+      "Memory increased the score from 79 to 92.",
+      "4 similar past event(s) averaged 96/100 measured success.",
+      "The event's strongest predicted outcome is personal_fit (100/100).",
+      "It matches 100% of the demo user's priority themes."
+    ],
+    "similar_past_events": [
+      "episode_007",
+      "episode_004",
+      "episode_005",
+      "episode_006"
+    ],
+    "confidence": 0.9199999999999999,
+    "citations": [
+      {
+        "claim": "Peer discussion for technical leaders shipping AI systems in production.",
+        "url": "https://example.com/events/cto-roundtable"
+      }
+    ]
+  },
+  {
+    "event_id": "evt_004",
+    "scores": {
+      "networking": 87,
+      "knowledge": 80,
+      "opportunity": 76,
+      "personal_fit": 65,
+      "friction": 8,
+      "overall": 84
+    },
+    "reasons": [
+      "Memory increased the score from 80 to 84.",
+      "1 similar past event(s) averaged 77/100 measured success.",
+      "The event's strongest predicted outcome is knowledge (86/100).",
+      "It matches 50% of the demo user's priority themes."
+    ],
+    "similar_past_events": [
+      "episode_008"
+    ],
+    "confidence": 0.6799999999999999,
+    "citations": [
+      {
+        "claim": "An evening build session for autonomous-agent prototypes.",
+        "url": "https://example.com/events/agent-hack-night"
+      }
+    ]
+  },
+  {
+    "event_id": "evt_009",
+    "scores": {
+      "networking": 84,
+      "knowledge": 82,
+      "opportunity": 68,
+      "personal_fit": 95,
+      "friction": 0,
+      "overall": 84
+    },
+    "reasons": [
+      "Memory increased the score from 77 to 84.",
+      "1 similar past event(s) averaged 85/100 measured success.",
+      "The event's strongest predicted outcome is personal_fit (100/100).",
+      "It matches 100% of the demo user's priority themes."
+    ],
+    "similar_past_events": [
+      "episode_007"
+    ],
+    "confidence": 0.6799999999999999,
+    "citations": [
+      {
+        "claim": "A facilitated peer circle for women leading engineering organizations.",
+        "url": "https://example.com/events/women-cto-circle"
+      }
+    ]
+  },
+  {
+    "event_id": "evt_005",
+    "scores": {
+      "networking": 69,
+      "knowledge": 73,
+      "opportunity": 63,
+      "personal_fit": 52,
+      "friction": 0,
+      "overall": 67
+    },
+    "reasons": [
+      "The event's strongest predicted outcome is knowledge (73/100).",
+      "It matches 50% of the demo user's priority themes."
+    ],
+    "similar_past_events": [],
+    "confidence": 0.6,
+    "citations": [
+      {
+        "claim": "Small-group feedback sessions with early-stage investors.",
+        "url": "https://example.com/events/fundraising-office-hours"
+      }
+    ]
+  },
+  {
+    "event_id": "evt_001",
+    "scores": {
+      "networking": 90,
+      "knowledge": 43,
+      "opportunity": 64,
+      "personal_fit": 72,
+      "friction": 16,
+      "overall": 64
+    },
+    "reasons": [
+      "Memory decreased the score from 82 to 64.",
+      "3 similar past event(s) averaged 35/100 measured success.",
+      "The event's strongest predicted outcome is networking (99/100).",
+      "It matches 100% of the demo user's priority themes."
+    ],
+    "similar_past_events": [
+      "episode_001",
+      "episode_002",
+      "episode_003"
+    ],
+    "confidence": 0.84,
+    "citations": [
+      {
+        "claim": "A large evening mixer for AI founders, investors, and builders.",
+        "url": "https://example.com/events/ai-founders-mixer"
+      }
+    ]
+  },
+  {
+    "event_id": "evt_008",
+    "scores": {
+      "networking": 43,
+      "knowledge": 97,
+      "opportunity": 52,
+      "personal_fit": 46,
+      "friction": 8,
+      "overall": 61
+    },
+    "reasons": [
+      "The event's strongest predicted outcome is knowledge (97/100).",
+      "It matches 50% of the demo user's priority themes."
+    ],
+    "similar_past_events": [],
+    "confidence": 0.6,
+    "citations": [
+      {
+        "claim": "Research presentations on evaluation, safety, and reliable agent design.",
+        "url": "https://example.com/events/responsible-agents"
+      }
+    ]
+  },
+  {
+    "event_id": "evt_007",
+    "scores": {
+      "networking": 77,
+      "knowledge": 50,
+      "opportunity": 56,
+      "personal_fit": 72,
+      "friction": 2,
+      "overall": 60
+    },
+    "reasons": [
+      "Memory decreased the score from 77 to 60.",
+      "3 similar past event(s) averaged 35/100 measured success.",
+      "The event's strongest predicted outcome is personal_fit (87/100).",
+      "It matches 100% of the demo user's priority themes."
+    ],
+    "similar_past_events": [
+      "episode_001",
+      "episode_002",
+      "episode_003"
+    ],
+    "confidence": 0.84,
+    "citations": [
+      {
+        "claim": "Founders present new AI products to peers and investors.",
+        "url": "https://example.com/events/ai-demo-day"
+      }
+    ]
+  },
+  {
+    "event_id": "evt_006",
+    "scores": {
+      "networking": 62,
+      "knowledge": 78,
+      "opportunity": 71,
+      "personal_fit": 46,
+      "friction": 86,
+      "overall": 59
+    },
+    "reasons": [
+      "The event's strongest predicted outcome is knowledge (78/100).",
+      "It matches 50% of the demo user's priority themes.",
+      "Cost, crowd size, or travel creates 86/100 friction."
+    ],
+    "similar_past_events": [],
+    "confidence": 0.6,
+    "citations": [
+      {
+        "claim": "Talks and panels for executives adopting enterprise AI.",
+        "url": "https://example.com/events/enterprise-ai-summit"
+      }
+    ]
+  }
+]
