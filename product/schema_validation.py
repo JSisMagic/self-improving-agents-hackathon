@@ -84,9 +84,11 @@ def _validate(
                 _fail(path, "must be an absolute URI")
         elif schema.get("format") == "date-time":
             try:
-                datetime.fromisoformat(instance.replace("Z", "+00:00"))
+                parsed = datetime.fromisoformat(instance.replace("Z", "+00:00"))
             except ValueError:
                 _fail(path, "must be an ISO 8601 date-time")
+            if "T" not in instance.upper() or parsed.tzinfo is None:
+                _fail(path, "must be an RFC 3339 date-time with a timezone")
 
     if _is_number(instance) and "minimum" in schema and instance < schema["minimum"]:
         _fail(path, f"must be at least {schema['minimum']}")

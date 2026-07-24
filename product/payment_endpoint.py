@@ -7,11 +7,12 @@ explicitly enables payments.
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
-from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeout
 from dataclasses import asdict, dataclass, is_dataclass
 from datetime import datetime, timezone
 import inspect
 import os
+from queue import Empty, Queue
+from threading import Thread
 from typing import Any, Protocol
 from urllib.parse import urlsplit, urlunsplit
 
@@ -22,6 +23,10 @@ DEFAULT_TIMEOUT_SECONDS = 5.0
 VALID_MODES = {"connected", "demo_fallback", "disabled", "error"}
 CONNECTED_STATUSES = {"payment_required", "verified", "settled", "failed"}
 _TESTNET_MARKERS = ("testnet", "sepolia", "devnet")
+
+
+class AdapterTimeout(TimeoutError):
+    """Raised when a provider adapter exceeds its caller-visible deadline."""
 
 
 class PaymentAdapter(Protocol):
@@ -226,12 +231,27 @@ def _call_bounded(
     request: Mapping[str, Any],
     timeout_seconds: float,
 ) -> Any:
-    executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="x402-payment")
-    future = executor.submit(_invoke_adapter, adapter, request, timeout_seconds)
+    outcome: Queue[tuple[bool, Any]] = Queue(maxsize=1)
+
+    def invoke() -> None:
+        try:
+            outcome.put((True, _invoke_adapter(adapter, request, timeout_seconds)))
+        except Exception as exc:
+            outcome.put((False, exc))
+
+    worker = Thread(
+        target=invoke,
+        name="x402-payment",
+        daemon=True,
+    )
+    worker.start()
     try:
-        return future.result(timeout=timeout_seconds)
-    finally:
-        executor.shutdown(wait=False, cancel_futures=True)
+        succeeded, value = outcome.get(timeout=timeout_seconds)
+    except Empty as exc:
+        raise AdapterTimeout from exc
+    if not succeeded:
+        raise value
+    return value
 
 
 def _provider_name(adapter: Any, response: Mapping[str, Any] | None = None) -> str:
@@ -359,7 +379,7 @@ def request_playbook(
 
     try:
         response = _call_bounded(adapter, request, timeout_seconds)
-    except FutureTimeout:
+    except AdapterTimeout:
         return _payment_error(
             event_id=event_id,
             provider=_provider_name(adapter),

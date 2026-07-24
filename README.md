@@ -35,3 +35,24 @@ override active specs:
 When implementation and an accepted spec disagree, either change the
 implementation or accept a spec/ADR change before treating the divergence as
 intentional.
+
+## Run the local vertical slice
+
+The dependency-free terminal view exercises Hasan's six demo controls with
+session-local episode storage. It never publishes or initiates a payment on the
+default path:
+
+```bash
+PAYMENTS_ENABLED=false python3 -m product.ui --all
+```
+
+Run the full local verification suite with:
+
+```bash
+python3 scripts/validate_specs.py
+python3 -m unittest discover -s tests -v
+```
+
+The default screen labels cited.md as `demo_fallback` and x402 as `disabled`.
+A connected final run still requires explicitly injected cited.md and x402
+testnet adapters plus inspectable provider evidence.

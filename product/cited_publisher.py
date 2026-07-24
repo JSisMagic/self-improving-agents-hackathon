@@ -8,11 +8,12 @@ Markdown preview with a truthful ``demo_fallback`` mode.
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
-from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeout
 from dataclasses import asdict, dataclass, is_dataclass
 from datetime import datetime, timezone
 import hashlib
 import inspect
+from queue import Empty, Queue
+from threading import Thread
 from typing import Any, Protocol
 from urllib.parse import urlsplit
 
@@ -20,6 +21,10 @@ from urllib.parse import urlsplit
 DEFAULT_PROVIDER = "cited.md"
 DEFAULT_TIMEOUT_SECONDS = 5.0
 VALID_MODES = {"connected", "demo_fallback", "disabled", "error"}
+
+
+class AdapterTimeout(TimeoutError):
+    """Raised when a provider adapter exceeds its caller-visible deadline."""
 
 
 class PublisherAdapter(Protocol):
@@ -233,12 +238,27 @@ def _invoke_adapter(
 
 
 def _call_bounded(adapter: Any, markdown: str, timeout_seconds: float) -> Any:
-    executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="cited-publisher")
-    future = executor.submit(_invoke_adapter, adapter, markdown, timeout_seconds)
+    outcome: Queue[tuple[bool, Any]] = Queue(maxsize=1)
+
+    def invoke() -> None:
+        try:
+            outcome.put((True, _invoke_adapter(adapter, markdown, timeout_seconds)))
+        except Exception as exc:
+            outcome.put((False, exc))
+
+    worker = Thread(
+        target=invoke,
+        name="cited-publisher",
+        daemon=True,
+    )
+    worker.start()
     try:
-        return future.result(timeout=timeout_seconds)
-    finally:
-        executor.shutdown(wait=False, cancel_futures=True)
+        succeeded, value = outcome.get(timeout=timeout_seconds)
+    except Empty as exc:
+        raise AdapterTimeout from exc
+    if not succeeded:
+        raise value
+    return value
 
 
 def _adapter_provider(adapter: Any, response: Mapping[str, Any] | None = None) -> str:
@@ -297,7 +317,7 @@ def publish_markdown(
 
     try:
         response = _call_bounded(adapter, markdown, timeout_seconds)
-    except FutureTimeout:
+    except AdapterTimeout:
         return PublicationResult(
             provider=_adapter_provider(adapter),
             status="error",
