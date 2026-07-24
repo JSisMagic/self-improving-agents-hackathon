@@ -1,5 +1,8 @@
 {
-  "event_id": "evt_001",
+  "schema_version": "1.0",
+  "user_id": "demo_founder_001",
+  "event_id": "evt_mixer_001",
+  "submitted_at": "2026-07-26T12:00:00-07:00",
   "meaningful_conversations": 7,
   "contacts_exchanged": 6,
   "followups_sent": 0,

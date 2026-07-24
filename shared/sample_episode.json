@@ -1,0 +1,61 @@
+{
+  "schema_version": "1.0",
+  "episode_id": "episode_demo_mixer_001",
+  "user_id": "demo_founder_001",
+  "event_id": "evt_mixer_001",
+  "recommendation": {
+    "schema_version": "1.0",
+    "run_id": "run_demo_before_v1",
+    "event_id": "evt_mixer_001",
+    "rank": 1,
+    "scores": {
+      "networking": 99,
+      "knowledge": 50,
+      "opportunity": 99,
+      "personal_fit": 87,
+      "friction": 16,
+      "overall": 81
+    },
+    "reasons": [
+      "The strongest predicted outcome is networking (99/100).",
+      "The event matches 100% of the demo profile's priority themes."
+    ],
+    "influencing_episode_ids": [],
+    "confidence": 0.6,
+    "citations": [
+      {
+        "claim": "A large evening mixer for AI founders, investors, and builders.",
+        "url": "https://example.com/events/ai-founders-mixer"
+      }
+    ],
+    "scoring_version": "v1",
+    "adjustments": []
+  },
+  "feedback": {
+    "schema_version": "1.0",
+    "user_id": "demo_founder_001",
+    "event_id": "evt_mixer_001",
+    "submitted_at": "2026-07-26T12:00:00-07:00",
+    "meaningful_conversations": 7,
+    "contacts_exchanged": 6,
+    "followups_sent": 0,
+    "meetings_booked": 0,
+    "questions_answered": 1,
+    "actionable_insights": 1,
+    "opportunities_created": 0,
+    "energy_after": 4,
+    "overall_value": 5,
+    "free_text_feedback": "Many conversations, but none turned into a useful follow-up. Smaller participatory events work better."
+  },
+  "actual_scores": {
+    "networking": 100,
+    "knowledge": 35,
+    "opportunity": 0,
+    "personal_fit": 45
+  },
+  "actual_event_success": 45,
+  "scoring_version": "v1",
+  "observed_at": "2026-07-26T12:00:00-07:00",
+  "storage_mode": "fixture",
+  "derived_versions": []
+}

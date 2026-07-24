@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 from typing import Any
 
-from shared.contracts import Event
+from shared.contracts import SCHEMA_VERSION, Event
 
 from .pioneer_client import PioneerClient, PioneerUnavailable
 
@@ -32,11 +32,26 @@ def normalize_event(raw: dict[str, Any]) -> Event:
     themes = raw.get("themes") or raw.get("topics") or raw.get("tags") or []
     if isinstance(themes, str):
         themes = [item.strip() for item in themes.split(",") if item.strip()]
+    if not themes:
+        themes = ["general"]
+
+    raw_crowd_size = raw.get("estimated_crowd_size", raw.get("capacity"))
+    crowd_size = (
+        None
+        if raw_crowd_size in (None, "")
+        else max(0, int(raw_crowd_size))
+    )
 
     return Event(
+        schema_version=str(raw.get("schema_version") or SCHEMA_VERSION),
+        data_mode=str(raw.get("data_mode") or "fixture"),
         event_id=event_id,
         title=title,
-        description=str(raw.get("description") or raw.get("summary") or ""),
+        description=str(
+            raw.get("description")
+            or raw.get("summary")
+            or "No source description was provided."
+        ),
         source_url=str(raw.get("source_url") or raw.get("url") or ""),
         source_name=str(raw.get("source_name") or raw.get("platform") or "Unknown"),
         start_time=str(raw.get("start_time") or raw.get("date") or ""),
@@ -45,7 +60,7 @@ def normalize_event(raw: dict[str, Any]) -> Event:
         format=str(raw.get("format") or raw.get("event_type") or "event").lower(),
         interaction_level=_fraction(raw.get("interaction_level"), 0.5),
         knowledge_depth=_fraction(raw.get("knowledge_depth"), 0.5),
-        estimated_crowd_size=max(0, int(raw.get("estimated_crowd_size") or raw.get("capacity") or 0)),
+        estimated_crowd_size=crowd_size,
         cost_usd=max(0.0, float(raw.get("cost_usd") or raw.get("price") or 0)),
     )
 
@@ -56,6 +71,10 @@ def extract_event(raw: dict[str, Any], pioneer: PioneerClient | None = None) -> 
     if pioneer is not None:
         try:
             extracted, status = pioneer.extract(raw)
+            extracted = dict(extracted)
+            extracted["data_mode"] = (
+                "live" if status == "connected" else "fixture"
+            )
             return normalize_event(extracted), status
         except PioneerUnavailable:
             pass

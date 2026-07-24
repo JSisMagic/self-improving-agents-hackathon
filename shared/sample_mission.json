@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0",
+  "mission_id": "mission_demo_mixer_001",
+  "user_id": "demo_founder_001",
+  "event_id": "evt_mixer_001",
+  "recommendation_run_id": "run_demo_before_v1",
+  "objectives": [
+    {
+      "metric": "meaningful_conversations",
+      "target": 5,
+      "rationale": "Prioritize depth over collecting a large number of weak contacts."
+    },
+    {
+      "metric": "meetings_booked",
+      "target": 2,
+      "rationale": "Turn promising conversations into measurable follow-up."
+    },
+    {
+      "metric": "questions_answered",
+      "target": 3,
+      "rationale": "Test concrete assumptions about agent memory and distribution."
+    }
+  ],
+  "target_people": [
+    "Technical founders building agent products",
+    "Agent infrastructure engineers",
+    "Potential distribution partners"
+  ],
+  "questions_to_ask": [
+    "What feedback signal most improved your agent's behavior?",
+    "Which agent-memory approach survived contact with real users?",
+    "What distribution channel produced durable customer conversations?"
+  ],
+  "follow_up_plan": "Send a personalized follow-up within 24 hours and propose a specific next conversation or shared experiment.",
+  "citations": [
+    {
+      "claim": "The fixture describes a large mixer for AI founders, investors, and builders.",
+      "url": "https://example.com/events/ai-founders-mixer"
+    }
+  ],
+  "created_at": "2026-07-25T17:00:00-07:00"
+}

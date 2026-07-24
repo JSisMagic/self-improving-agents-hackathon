@@ -1,29 +1,37 @@
 [
   {
-    "event_id": "evt_001",
+    "schema_version": "1.0",
+    "run_id": "run_demo_before_v1",
+    "event_id": "evt_mixer_001",
+    "rank": 1,
     "scores": {
       "networking": 99,
       "knowledge": 50,
       "opportunity": 99,
       "personal_fit": 87,
       "friction": 16,
-      "overall": 82
+      "overall": 81
     },
     "reasons": [
-      "The event's strongest predicted outcome is networking (99/100).",
-      "It matches 100% of the demo user's priority themes."
+      "The strongest predicted outcome is networking (99/100).",
+      "The event matches 100% of the demo profile's priority themes."
     ],
-    "similar_past_events": [],
+    "influencing_episode_ids": [],
     "confidence": 0.6,
     "citations": [
       {
         "claim": "A large evening mixer for AI founders, investors, and builders.",
         "url": "https://example.com/events/ai-founders-mixer"
       }
-    ]
+    ],
+    "scoring_version": "v1",
+    "adjustments": []
   },
   {
-    "event_id": "evt_002",
+    "schema_version": "1.0",
+    "run_id": "run_demo_before_v1",
+    "event_id": "evt_workshop_001",
+    "rank": 2,
     "scores": {
       "networking": 73,
       "knowledge": 97,
@@ -33,39 +41,46 @@
       "overall": 80
     },
     "reasons": [
-      "The event's strongest predicted outcome is personal_fit (100/100).",
-      "It matches 100% of the demo user's priority themes."
+      "The strongest predicted outcome is personal_fit (100/100).",
+      "The event matches 100% of the demo profile's priority themes."
     ],
-    "similar_past_events": [],
+    "influencing_episode_ids": [],
     "confidence": 0.6,
     "citations": [
       {
         "claim": "A small hands-on workshop for designing agent memory and feedback loops.",
         "url": "https://example.com/events/agent-workshop"
       }
-    ]
+    ],
+    "scoring_version": "v1",
+    "adjustments": []
   },
   {
-    "event_id": "evt_004",
+    "schema_version": "1.0",
+    "run_id": "run_demo_before_v1",
+    "event_id": "evt_live_swarmhack_20260724",
+    "rank": 3,
     "scores": {
-      "networking": 85,
+      "networking": 75,
       "knowledge": 86,
-      "opportunity": 79,
-      "personal_fit": 60,
-      "friction": 8,
-      "overall": 80
+      "opportunity": 70,
+      "personal_fit": 100,
+      "friction": 0,
+      "overall": 79
     },
     "reasons": [
-      "The event's strongest predicted outcome is knowledge (86/100).",
-      "It matches 50% of the demo user's priority themes."
+      "The strongest predicted outcome is personal_fit (100/100).",
+      "The event matches 100% of the demo profile's priority themes."
     ],
-    "similar_past_events": [],
-    "confidence": 0.6,
+    "influencing_episode_ids": [],
+    "confidence": 0.8,
     "citations": [
       {
-        "claim": "An evening build session for autonomous-agent prototypes.",
-        "url": "https://example.com/events/agent-hack-night"
+        "claim": "A full day of building alongside engineers, founders, and operators with APIs, infrastructure, mentors, and community.",
+        "url": "https://luma.com/swarmhack"
       }
-    ]
+    ],
+    "scoring_version": "v1",
+    "adjustments": []
   }
 ]

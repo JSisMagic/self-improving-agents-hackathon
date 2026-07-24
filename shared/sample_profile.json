@@ -1,15 +1,32 @@
 {
-  "user_id": "demo_gergana",
-  "name": "Gergana",
-  "location": "San Francisco",
-  "interests": ["AI agents", "founders", "CTO leadership"],
-  "goal_weights": {
-    "networking": 0.30,
-    "knowledge": 0.30,
-    "opportunity": 0.30,
-    "personal_fit": 0.10
+  "schema_version": "1.0",
+  "user_id": "demo_founder_001",
+  "role": "Technical founder building autonomous-agent products",
+  "goal_priorities": {
+    "networking": 0.3,
+    "knowledge": 0.3,
+    "opportunity": 0.3
   },
-  "preferred_formats": ["workshop", "roundtable", "hackathon"],
-  "max_cost_usd": 100,
-  "preferred_max_crowd_size": 150
+  "desired_outcomes": [
+    "Build continuing peer relationships",
+    "Learn practical autonomous-agent implementation techniques",
+    "Meet potential collaborators and distribution partners"
+  ],
+  "preferences": {
+    "themes": [
+      "AI agents",
+      "founders",
+      "CTO leadership"
+    ],
+    "formats": [
+      "workshop",
+      "roundtable",
+      "hackathon"
+    ]
+  },
+  "constraints": {
+    "location": "San Francisco",
+    "max_cost_usd": 100,
+    "preferred_max_crowd_size": 150
+  }
 }
