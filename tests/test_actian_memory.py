@@ -74,12 +74,22 @@ class FakeFilterBuilder:
         return tuple(self.conditions)
 
 
+class FakeUpdateStatus:
+    def __init__(self, name):
+        self.name = name
+
+
 class FakeSDK:
     Distance = SimpleNamespace(Cosine="cosine")
     VectorParams = FakeVectorParams
     PointStruct = FakePointStruct
     Field = FakeField
     FilterBuilder = FakeFilterBuilder
+    UpdateStatus = SimpleNamespace(
+        Acknowledged=FakeUpdateStatus("Acknowledged"),
+        Completed=FakeUpdateStatus("Completed"),
+        ClockRejected=FakeUpdateStatus("ClockRejected"),
+    )
 
 
 class FakeActianStore:
@@ -88,6 +98,8 @@ class FakeActianStore:
         self.collection = None
         self.vector_params = None
         self.flushes = 0
+        self.flush_result = True
+        self.upsert_status = FakeSDK.UpdateStatus.Completed
 
 
 class FakeCollections:
@@ -106,8 +118,10 @@ class FakePoints:
     def upsert(self, collection, *, points):
         if collection != self.store.collection:
             raise AssertionError("unexpected collection")
-        for point in points:
-            self.store.points[point.id] = point
+        if self.store.upsert_status is not FakeSDK.UpdateStatus.ClockRejected:
+            for point in points:
+                self.store.points[point.id] = point
+        return SimpleNamespace(status=self.store.upsert_status)
 
     def search(
         self,
@@ -148,6 +162,7 @@ class FakeVDE:
         if collection != self.store.collection:
             raise AssertionError("unexpected collection")
         self.store.flushes += 1
+        return self.store.flush_result
 
     def get_vector_count(self, collection):
         if collection != self.store.collection:
@@ -283,6 +298,81 @@ class ActianMemoryTests(unittest.TestCase):
 
         self.assertEqual(memory.retrieve_similar("another_user", mixer), [])
 
+    def test_rejected_actian_write_never_claims_live_storage(self):
+        memory, store = self.connected_memory()
+        store.upsert_status = FakeSDK.UpdateStatus.ClockRejected
+        mixer = next(
+            event for event in self.events if event.event_id == "evt_mixer_001"
+        )
+        recommendation = rank_events(
+            self.events,
+            self.profile,
+            limit=None,
+            run_id="run_actian_rejected_v1",
+        )[0]
+        episode = EventEpisode(
+            schema_version="1.0",
+            episode_id="episode_actian_rejected_001",
+            user_id=self.profile.user_id,
+            event_id=mixer.event_id,
+            recommendation=recommendation,
+            feedback=self.feedback,
+            actual_scores={
+                "networking": 10,
+                "knowledge": 20,
+                "opportunity": 30,
+                "personal_fit": 40,
+            },
+            actual_event_success=25,
+            scoring_version="v1",
+            observed_at="2026-07-24T20:00:00-07:00",
+            storage_mode="local_fallback",
+        )
+
+        with self.assertRaisesRegex(RuntimeError, "not acknowledged"):
+            memory.record(episode, mixer)
+
+        self.assertEqual(episode.storage_mode, "local_fallback")
+        self.assertEqual(store.points, {})
+        self.assertEqual(store.flushes, 0)
+
+    def test_unflushed_actian_write_never_claims_live_storage(self):
+        memory, store = self.connected_memory()
+        store.flush_result = False
+        mixer = next(
+            event for event in self.events if event.event_id == "evt_mixer_001"
+        )
+        recommendation = rank_events(
+            self.events,
+            self.profile,
+            limit=None,
+            run_id="run_actian_unflushed_v1",
+        )[0]
+        episode = EventEpisode(
+            schema_version="1.0",
+            episode_id="episode_actian_unflushed_001",
+            user_id=self.profile.user_id,
+            event_id=mixer.event_id,
+            recommendation=recommendation,
+            feedback=self.feedback,
+            actual_scores={
+                "networking": 10,
+                "knowledge": 20,
+                "opportunity": 30,
+                "personal_fit": 40,
+            },
+            actual_event_success=25,
+            scoring_version="v1",
+            observed_at="2026-07-24T20:00:00-07:00",
+            storage_mode="local_fallback",
+        )
+
+        with self.assertRaisesRegex(RuntimeError, "flush did not complete"):
+            memory.record(episode, mixer)
+
+        self.assertEqual(episode.storage_mode, "local_fallback")
+        self.assertEqual(store.flushes, 1)
+
     def test_local_fallback_retrieves_a_similar_new_event(self):
         with tempfile.TemporaryDirectory() as directory:
             memory = LocalEpisodeMemory(Path(directory) / "episodes.json")
@@ -402,6 +492,38 @@ class ActianMemoryTests(unittest.TestCase):
             self.assertIsInstance(memory, LocalEpisodeMemory)
             self.assertIn("RuntimeError", memory.status)
             self.assertNotIn("working secret", memory.status)
+
+    def test_factory_passes_connected_client_configuration(self):
+        with tempfile.TemporaryDirectory() as directory:
+            primary = SimpleNamespace()
+            with (
+                patch.dict(
+                    os.environ,
+                    {
+                        "ACTIAN_VECTORAI_ENABLED": "true",
+                        "ACTIAN_VECTORAI_URL": "vector.example:6574",
+                        "ACTIAN_VECTORAI_ACCESS_TOKEN": "test-token",
+                        "ACTIAN_VECTORAI_TIMEOUT": "7",
+                        "ACTIAN_VECTORAI_MAX_RETRIES": "2",
+                    },
+                    clear=False,
+                ),
+                patch(
+                    "intelligence.actian_memory.ActianVectorMemory",
+                    return_value=primary,
+                ) as constructor,
+            ):
+                memory = create_episode_memory(
+                    Path(directory) / "episodes.json"
+                )
+
+            self.assertIsInstance(memory, ResilientEpisodeMemory)
+            constructor.assert_called_once()
+            options = constructor.call_args.kwargs
+            self.assertEqual(options["url"], "vector.example:6574")
+            self.assertEqual(options["access_token"], "test-token")
+            self.assertEqual(options["timeout"], 7)
+            self.assertEqual(options["max_retries"], 2)
 
 
 if __name__ == "__main__":

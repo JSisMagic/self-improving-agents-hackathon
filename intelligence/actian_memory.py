@@ -24,6 +24,8 @@ DEFAULT_COLLECTION = "event_copilot_episodes_v1"
 DEFAULT_EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 DEFAULT_EMBEDDING_DIMENSION = 384
 DEFAULT_RETRIEVAL_LIMIT = 4
+DEFAULT_CLIENT_TIMEOUT_SECONDS = 5.0
+DEFAULT_CLIENT_MAX_RETRIES = 1
 LOCAL_SIMILARITY_THRESHOLD = 0.55
 
 
@@ -326,12 +328,19 @@ class ActianVectorMemory:
         embedding_model: str = DEFAULT_EMBEDDING_MODEL,
         dimension: int = DEFAULT_EMBEDDING_DIMENSION,
         score_threshold: float | None = None,
+        access_token: str | None = None,
+        timeout: float = DEFAULT_CLIENT_TIMEOUT_SECONDS,
+        max_retries: int = DEFAULT_CLIENT_MAX_RETRIES,
         embedder: Callable[[str], list[float]] | None = None,
         sdk: Any | None = None,
         client_factory: Callable[[], Any] | None = None,
     ) -> None:
         if dimension < 1:
             raise ValueError("Actian embedding dimension must be positive")
+        if timeout <= 0:
+            raise ValueError("Actian client timeout must be positive")
+        if max_retries < 0:
+            raise ValueError("Actian client max_retries cannot be negative")
         self.url = url
         self.collection = collection
         self.embedding_model = embedding_model
@@ -339,7 +348,12 @@ class ActianVectorMemory:
         self.score_threshold = score_threshold
         self._sdk = sdk or self._load_sdk()
         self._client_factory = client_factory or (
-            lambda: self._sdk.VectorAIClient(self.url)
+            lambda: self._sdk.VectorAIClient(
+                self.url,
+                access_token=access_token or None,
+                timeout=timeout,
+                max_retries=max_retries,
+            )
         )
         self._last_count = 0
         self._last_retrieval_evidence: tuple[RetrievalEvidence, ...] = ()
@@ -421,39 +435,45 @@ class ActianVectorMemory:
         return self._last_retrieval_evidence
 
     def record(self, episode: EventEpisode, event: Event | None = None) -> None:
-        if episode.storage_mode != "fixture":
-            episode.storage_mode = self.storage_mode
+        stored_episode = EventEpisode.from_dict(episode.to_dict())
+        if stored_episode.storage_mode != "fixture":
+            stored_episode.storage_mode = self.storage_mode
         fingerprint = (
             event_fingerprint(event)
             if event is not None
-            else _episode_fallback_fingerprint(episode)
+            else _episode_fallback_fingerprint(stored_episode)
         )
         point = self._sdk.PointStruct(
             id=str(
                 uuid5(
                     NAMESPACE_URL,
-                    f"event-copilot:{episode.episode_id}",
+                    f"event-copilot:{stored_episode.episode_id}",
                 )
             ),
             vector=self._embed(fingerprint),
             payload={
-                "schema_version": episode.schema_version,
-                "episode_id": episode.episode_id,
-                "user_id": episode.user_id,
-                "event_id": episode.event_id,
-                "scoring_version": episode.scoring_version,
-                "observed_at": episode.observed_at,
-                "actual_event_success": episode.actual_event_success,
+                "schema_version": stored_episode.schema_version,
+                "episode_id": stored_episode.episode_id,
+                "user_id": stored_episode.user_id,
+                "event_id": stored_episode.event_id,
+                "scoring_version": stored_episode.scoring_version,
+                "observed_at": stored_episode.observed_at,
+                "actual_event_success": stored_episode.actual_event_success,
                 "event_fingerprint": fingerprint,
-                "episode": episode.to_dict(),
+                "episode": stored_episode.to_dict(),
             },
         )
         with self._client() as client:
-            client.points.upsert(self.collection, points=[point])
-            client.vde.flush(self.collection)
+            result = client.points.upsert(self.collection, points=[point])
+            status_name = getattr(getattr(result, "status", None), "name", "")
+            if status_name not in {"Acknowledged", "Completed"}:
+                raise RuntimeError("Actian point upsert was not acknowledged")
+            if client.vde.flush(self.collection) is not True:
+                raise RuntimeError("Actian point flush did not complete")
             self._last_count = int(
                 client.vde.get_vector_count(self.collection) or 0
             )
+        episode.storage_mode = stored_episode.storage_mode
 
     def retrieve_similar(
         self,
@@ -641,6 +661,17 @@ def create_episode_memory(
             ),
             dimension=dimension,
             score_threshold=threshold,
+            access_token=os.getenv("ACTIAN_VECTORAI_ACCESS_TOKEN") or None,
+            timeout=_safe_number(
+                "ACTIAN_VECTORAI_TIMEOUT",
+                DEFAULT_CLIENT_TIMEOUT_SECONDS,
+            ),
+            max_retries=int(
+                _safe_number(
+                    "ACTIAN_VECTORAI_MAX_RETRIES",
+                    DEFAULT_CLIENT_MAX_RETRIES,
+                )
+            ),
         )
     except Exception as exc:
         fallback.note_unavailable("actian_vectorai", exc)

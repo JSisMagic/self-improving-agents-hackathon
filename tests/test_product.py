@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch
 
 from product.schema_validation import SchemaValidationError, validate_schema
 from product.ui import (
@@ -11,6 +12,17 @@ from product.ui import (
 
 
 class ProductFlowTests(unittest.TestCase):
+    def setUp(self) -> None:
+        environment = patch.dict(
+            "os.environ",
+            {
+                "ACTIAN_VECTORAI_ENABLED": "false",
+                "BAND_ENABLED": "false",
+            },
+        )
+        environment.start()
+        self.addCleanup(environment.stop)
+
     def test_canonical_inputs_validate_against_frozen_schemas(self) -> None:
         profile, events, feedback = load_canonical_demo()
 
@@ -66,6 +78,10 @@ class ProductFlowTests(unittest.TestCase):
         self.assertIsNone(state.playbook.payment)
 
         validate_schema(state.episode.to_dict(), "episode")
+        self.assertEqual(state.episode.storage_mode, "local_fallback")
+        self.assertEqual(state.memory_status["provider"], "local_json")
+        self.assertEqual(state.memory_status["mode"], "demo_fallback")
+        self.assertIn("local_fallback", state.memory_status["status"])
         validate_schema(state.prospective_event, "event")
         next_event_ids = {
             item.event_id if hasattr(item, "event_id") else item["event_id"]
@@ -95,6 +111,16 @@ class ProductFlowTests(unittest.TestCase):
             prospect["influencing_episode_ids"],
         )
         self.assertIn("recorded feedback", prospect["reasons"][0].lower())
+        self.assertIn(
+            "Local deterministic structured-event similarity",
+            " ".join(prospect["reasons"]),
+        )
+        self.assertEqual(len(state.memory_retrieval_evidence), 1)
+        retrieval = state.memory_retrieval_evidence[0]
+        self.assertEqual(retrieval["episode_id"], state.episode.episode_id)
+        self.assertEqual(retrieval["provider"], "local_json")
+        self.assertEqual(retrieval["storage_mode"], "local_fallback")
+        self.assertGreaterEqual(retrieval["relevance"], 0.55)
         self.assertEqual(state.next_event_modes[prospect["event_id"]], "live")
         self.assertEqual(
             prospect["citations"][0]["url"],
@@ -109,6 +135,16 @@ class ProductFlowTests(unittest.TestCase):
         self.assertIn("Step SF 2026", rendered)
         self.assertIn(
             "Delta: NEW prospective event; no prior rank or score.",
+            rendered,
+        )
+        self.assertIn("Storage mode: local_fallback", rendered)
+        self.assertIn("ACTIAN MEMORY STATUS", rendered)
+        self.assertIn(
+            "provider=local_json | mode=demo_fallback",
+            rendered,
+        )
+        self.assertIn(
+            f"Retrieval: episode={state.episode.episode_id}",
             rendered,
         )
         self.assertIn(state.episode.episode_id, rendered)
@@ -159,6 +195,9 @@ class ProductFlowTests(unittest.TestCase):
             recorded["episode"]["feedback"]["free_text_feedback"],
             feedback.free_text_feedback,
         )
+        self.assertEqual(recorded["episode"]["storage_mode"], "local_fallback")
+        self.assertEqual(recorded["memory_status"]["provider"], "local_json")
+        self.assertEqual(recorded["memory_status"]["mode"], "demo_fallback")
 
         improved = app.evaluate_prospect(CANONICAL_PROSPECTIVE_EVENT)
         self.assertEqual(improved["stage"], 6)
@@ -182,6 +221,10 @@ class ProductFlowTests(unittest.TestCase):
         self.assertIn(
             improved["episode"]["episode_id"],
             prospect["influencing_episode_ids"],
+        )
+        self.assertEqual(
+            improved["memory_retrieval_evidence"][0]["provider"],
+            "local_json",
         )
 
     def test_browser_form_setup_rejects_invalid_contract_input(self) -> None:

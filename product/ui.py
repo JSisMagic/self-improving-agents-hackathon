@@ -17,6 +17,7 @@ import tempfile
 import threading
 from dataclasses import asdict, dataclass, field, is_dataclass
 from datetime import datetime, timezone
+from math import isfinite
 from pathlib import Path
 from typing import Any, Callable, Mapping, Sequence, TextIO
 from uuid import uuid4
@@ -73,6 +74,7 @@ class DemoServices:
     request_playbook: Callable[[str, Any], Any] | None
     record_outcome: Callable[[Any, Any, Any, Any], Any]
     rerank: Callable[[Any, list[Any]], Sequence[Any]]
+    inspect_memory: Callable[[], Any] | None = None
     cleanup: Callable[[], None] | None = None
 
 
@@ -96,6 +98,8 @@ class DemoState:
     next_events: list[Any] = field(default_factory=list)
     next_event_modes: dict[str, str] = field(default_factory=dict)
     improved_recommendations: list[Any] = field(default_factory=list)
+    memory_status: dict[str, str] = field(default_factory=dict)
+    memory_retrieval_evidence: list[dict[str, Any]] = field(default_factory=list)
     notices: list[str] = field(default_factory=list)
 
 
@@ -181,6 +185,52 @@ def _safe_status(result: Any) -> str:
         return "unavailable"
     cleaned = " ".join(status.split())
     return cleaned[:80]
+
+
+def _safe_text(value: Any, *, default: str = NOT_REPORTED, limit: int = 160) -> str:
+    if not isinstance(value, str) or not value.strip():
+        return default
+    return " ".join(value.split())[:limit]
+
+
+def _safe_memory_observability(
+    value: Any,
+) -> tuple[dict[str, str], list[dict[str, Any]]]:
+    """Normalize adapter diagnostics without adding them to shared contracts."""
+
+    payload = _as_mapping(value)
+    if not payload:
+        return {}, []
+    mode = _safe_action_mode(payload)
+    memory_status = {
+        "provider": _safe_text(payload.get("provider"), limit=64),
+        "mode": mode,
+        "status": _safe_status(payload),
+    }
+    evidence: list[dict[str, Any]] = []
+    for raw_item in _items(payload.get("retrieval_evidence"))[:4]:
+        item = _as_mapping(raw_item)
+        try:
+            relevance = float(item.get("relevance"))
+        except (TypeError, ValueError):
+            continue
+        if not isfinite(relevance):
+            continue
+        storage_mode = item.get("storage_mode")
+        evidence.append(
+            {
+                "episode_id": _safe_text(item.get("episode_id"), limit=80),
+                "provider": _safe_text(item.get("provider"), limit=64),
+                "relevance": round(relevance, 3),
+                "storage_mode": (
+                    str(storage_mode)
+                    if storage_mode in {"live", "local_fallback", "fixture"}
+                    else NOT_REPORTED
+                ),
+                "reason": _safe_text(item.get("reason")),
+            }
+        )
+    return memory_status, evidence
 
 
 def _disabled_action(provider: str, message: str) -> dict[str, str]:
@@ -362,6 +412,27 @@ def default_services() -> DemoServices:
             run_id="run_demo_after_v1",
         )
 
+    def inspect_memory() -> dict[str, Any]:
+        try:
+            retrieval_evidence = getattr(
+                memory,
+                "last_retrieval_evidence",
+                (),
+            )
+            return {
+                "provider": getattr(memory, "provider", NOT_REPORTED),
+                "mode": getattr(memory, "mode", "error"),
+                "status": getattr(memory, "status", "unavailable"),
+                "retrieval_evidence": list(retrieval_evidence),
+            }
+        except Exception:
+            return {
+                "provider": "episode_memory",
+                "mode": "error",
+                "status": "memory status unavailable",
+                "retrieval_evidence": [],
+            }
+
     def cleanup() -> None:
         try:
             band_orchestrator.close()
@@ -383,6 +454,7 @@ def default_services() -> DemoServices:
         request_playbook=playbook,
         record_outcome=record,
         rerank=rerank,
+        inspect_memory=inspect_memory,
         cleanup=cleanup,
     )
 
@@ -394,6 +466,26 @@ class EventCopilotUI:
         self.services = services or default_services()
         self.state = DemoState()
         self._closed = False
+        self._refresh_memory_observability()
+
+    def _refresh_memory_observability(self) -> None:
+        inspector = self.services.inspect_memory
+        if inspector is None:
+            self.state.memory_status = {}
+            self.state.memory_retrieval_evidence = []
+            return
+        try:
+            raw_status = inspector()
+        except Exception:
+            raw_status = {
+                "provider": "episode_memory",
+                "mode": "error",
+                "status": "memory status unavailable",
+            }
+        (
+            self.state.memory_status,
+            self.state.memory_retrieval_evidence,
+        ) = _safe_memory_observability(raw_status)
 
     def close(self) -> None:
         """Release episode-memory resources, if this UI created them."""
@@ -453,6 +545,7 @@ class EventCopilotUI:
             event_modes=modes,
             notices=notices,
         )
+        self._refresh_memory_observability()
         return self.state
 
     def run_initial_recommendation(self) -> list[Any]:
@@ -640,6 +733,7 @@ class EventCopilotUI:
         self.state.next_events = []
         self.state.next_event_modes = {}
         self.state.improved_recommendations = []
+        self._refresh_memory_observability()
         return episode
 
     def show_improved_recommendations(
@@ -736,6 +830,7 @@ class EventCopilotUI:
             for item in prospective_events
         }
         self.state.improved_recommendations = recommendations
+        self._refresh_memory_observability()
         return recommendations
 
     def run_control(self, control: int) -> Any:
@@ -783,6 +878,8 @@ class EventCopilotUI:
 
         if self.state.profile is not None:
             lines.extend(["", *self._render_profile(), "", *self._render_candidates()])
+        if self.state.memory_status:
+            lines.extend(["", *self._render_memory_status()])
         if self.state.initial_recommendations:
             lines.extend(
                 [
@@ -1095,6 +1192,42 @@ class EventCopilotUI:
             f"  Storage mode: {storage_mode}",
             "  Episode write succeeded; next-slate ranking is now permitted.",
         ]
+
+    def _render_memory_status(self) -> list[str]:
+        memory = self.state.memory_status
+        lines = [
+            "ACTIAN MEMORY STATUS",
+            "  Backend: "
+            f"provider={memory.get('provider', NOT_REPORTED)} | "
+            f"mode={memory.get('mode', 'error')} | "
+            f"status={memory.get('status', 'unavailable')}",
+        ]
+        if self.state.episode is not None:
+            lines.append(
+                "  Write: "
+                f"storage_mode={_get(self.state.episode, 'storage_mode', NOT_REPORTED)}"
+            )
+        if self.state.memory_retrieval_evidence:
+            for item in self.state.memory_retrieval_evidence:
+                relevance = item.get("relevance")
+                rendered_relevance = (
+                    f"{relevance:.3f}"
+                    if isinstance(relevance, (int, float))
+                    else NOT_REPORTED
+                )
+                lines.append(
+                    "  Retrieval: "
+                    f"episode={item.get('episode_id', NOT_REPORTED)} | "
+                    f"provider={item.get('provider', NOT_REPORTED)} | "
+                    f"relevance={rendered_relevance} | "
+                    f"storage_mode={item.get('storage_mode', NOT_REPORTED)}"
+                )
+                lines.append(
+                    f"    Reason: {item.get('reason', NOT_REPORTED)}"
+                )
+        elif self.state.improved_recommendations:
+            lines.append("  Retrieval: no matching episode evidence reported.")
+        return lines
 
     def _require_loaded(self) -> None:
         if self.state.profile is None or len(self.state.events) != 3:
@@ -1445,7 +1578,7 @@ BROWSER_HTML = r"""<!doctype html>
       "Generate Event Mission",
       "Request detailed playbook",
       "Simulate post-event feedback",
-      "Show improved recommendations"
+      "Evaluate next live event"
     ];
     const stageCopy = [
       ["Ready for the demo", "Six controls · one visible learning moment"],
@@ -1454,7 +1587,7 @@ BROWSER_HTML = r"""<!doctype html>
       ["Event Mission generated", "TST-004 · measurable objectives and exact grounded preview"],
       ["External boundaries exercised", "TST-005 · fallback and disabled modes are explicit"],
       ["Outcome recorded", "A successfully stored episode now authorizes reranking"],
-      ["The system learned", "TST-006 · workshop overtakes mixer with evidence"]
+      ["Next opportunity ranked", "TST-006 · attended event excluded; new live event uses prior evidence"]
     ];
     let state = null;
     let busy = false;
@@ -1728,9 +1861,9 @@ BROWSER_HTML = r"""<!doctype html>
       const afterById = Object.fromEntries(after.map((item, index) => [item.event_id, { ...item, fallbackRank: index + 1 }]));
       const events = eventMap();
       return `<section class="section">
-        <div class="section-head"><div><h2>The learning moment</h2><p>Same profile · same candidates · same scoring version · one new episode</p></div><span class="chip connected">episode applied</span></div>
+        <div class="section-head"><div><h2>The learning moment</h2><p>Same profile · fresh candidate slate · same scoring version · one prior episode</p></div><span class="chip connected">episode applied</span></div>
         <div class="section-body">
-          <div class="learning-hero"><div><h3>Workshop overtakes mixer.</h3><p>Deliberate feedback showed that high conversation volume did not create durable follow-up. The system now favors the smaller participatory workshop.</p></div><div class="learning-stat"><strong>2 → 1</strong><span>workshop rank</span></div></div>
+          <div class="learning-hero"><div><h3>Experience informs the next event.</h3><p>The attended event is excluded while its outcome evidence adjusts the fresh live prospect.</p></div><div class="learning-stat"><strong>NEW</strong><span>live prospect ranked</span></div></div>
           <div class="delta-table">
             <div class="delta-row delta-head"><span>Event</span><span>Rank</span><span>Score</span><span>Evidence</span></div>
             ${before.map((prior, index) => {
@@ -1785,21 +1918,8 @@ BROWSER_HTML = r"""<!doctype html>
 
 # Keep the browser presentation in a standalone asset so the guided experience
 # can evolve without changing the controller or the dependency-free HTTP layer.
-BROWSER_HTML = (
-    (ROOT / "product" / "ui_browser.html")
-    .read_text(encoding="utf-8")
-    .replace(
-        'notify("Outcome saved as a local episode.");',
-        'notify(`Outcome saved with ${h(state.episode?.storage_mode || "not reported")} storage.`);',
-    )
-    .replace(
-        "Saving creates one session-local learning episode.",
-        "Saving creates one learning episode; its storage mode is reported after the write.",
-    )
-    .replace(
-        "Episode ${h(episode.episode_id)} · session-local storage · reranking is now permitted.",
-        'Episode ${h(episode.episode_id)} · ${h(episode.storage_mode || "not reported")} storage · reranking is now permitted.',
-    )
+BROWSER_HTML = (ROOT / "product" / "ui_browser.html").read_text(
+    encoding="utf-8"
 )
 
 

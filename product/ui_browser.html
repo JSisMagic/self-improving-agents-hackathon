@@ -558,7 +558,7 @@
         });
         state = payload.state;
         render();
-        notify("Outcome saved as a local episode.");
+        notify(`Outcome saved with ${h(state.episode?.storage_mode || "not reported")} storage.`);
       } catch (error) {
         notify(error.message, true);
       } finally {
@@ -713,6 +713,7 @@
         obj(state.stage === 6 ? state.next_event_modes : state.event_modes)
       );
       const band = obj(obj(state.handoff).band);
+      const memory = obj(state.memory_status);
       if (state.stage >= 1) {
         chips.push(`<span class="pill live">${modes.filter((item) => item === "live").length} live</span>`);
         chips.push(`<span class="pill fixture">${modes.filter((item) => item === "fixture").length} fixtures</span>`);
@@ -722,6 +723,10 @@
       if (state.handoff) {
         const bandMode = mode(band.mode);
         chips.push(`<span class="pill ${h(bandMode)}">Band: ${h(bandMode)}</span>`);
+      }
+      if (Object.keys(memory).length) {
+        const memoryMode = mode(memory.mode);
+        chips.push(`<span class="pill ${h(memoryMode)}">Actian: ${h(memoryMode)}</span>`);
       }
       if (state.publication) {
         const publicationMode = mode(obj(state.publication).mode);
@@ -966,6 +971,7 @@
       const episode = obj(state.episode);
       const feedback = Object.keys(obj(episode.feedback)).length ? obj(episode.feedback) : obj(state.feedback_fixture);
       const attended = eventMap()[episode.event_id] || {};
+      const memory = obj(state.memory_status);
       return `<div>
         <section class="feedback">
           <div><span class="pill connected">Episode saved</span><h2>${h(attended.title || episode.event_id)} recorded</h2><p>${h(feedback.free_text_feedback || "Outcome metrics were saved successfully.")}</p></div>
@@ -976,7 +982,11 @@
             <div class="metric"><strong>${h(episode.actual_event_success)}</strong><span>actual success</span></div>
           </div>
         </section>
-        <details class="details"><summary>Episode evidence</summary><div class="details-body">Episode ${h(episode.episode_id)} · ${h(episode.storage_mode || "not reported")} storage · next-slate ranking is now permitted.</div></details>
+        <details class="details"><summary>Episode and Actian memory status</summary><div class="details-body">
+          <p>Write · episode ${h(episode.episode_id)} · ${h(episode.storage_mode || "not reported")} storage.</p>
+          <p>Backend · provider ${h(memory.provider)} · mode ${h(memory.mode)} · status ${h(memory.status)}.</p>
+          <p>The successful write permits the next-slate ranking.</p>
+        </div></details>
         ${renderProspectEditor()}
       </div>`;
     }
@@ -992,6 +1002,8 @@
       const episodeApplied = list(prospectRecommendation.influencing_episode_ids).length > 0;
       const attendedId = obj(state.episode).event_id;
       const attended = events[attendedId] || {};
+      const memory = obj(state.memory_status);
+      const retrievalEvidence = list(state.memory_retrieval_evidence);
       return `<div>
         <section class="result">
           <div><span class="pill live">NEW · live</span><h2 style="margin-top:8px">${h(prospect.title || prospect.event_id)} ranks #${h(prospectRank)}</h2><p>${h(episodeApplied ? (list(prospectRecommendation.reasons)[0] || "The saved episode influenced this new event.") : "The event was evaluated after feedback. This run did not claim that the prior episode matched the new event.")}</p>${prospect.source_url ? `<a href="${safeUrl(prospect.source_url)}" target="_blank" rel="noreferrer">Open source ↗</a>` : ""}</div>
@@ -1014,9 +1026,11 @@
           </div>`;
         }).join("")}</div>
         <details class="details"><summary>Evidence and full next-event recommendations</summary><div class="details-body">
+          <p><strong>Actian memory boundary</strong> · provider ${h(memory.provider)} · mode ${h(memory.mode)} · status ${h(memory.status)}.</p>
+          ${retrievalEvidence.length ? retrievalEvidence.map((item) => `<p>Retrieval · episode ${h(item.episode_id)} · provider ${h(item.provider)} · relevance ${h(Number(item.relevance).toFixed(3))} · storage ${h(item.storage_mode)} · ${h(item.reason)}.</p>`).join("") : "<p>Retrieval · no matching episode evidence reported.</p>"}
           ${after.map((recommendation) => `<p><strong>${h(events[recommendation.event_id]?.title)}</strong> · ${h(obj(state.next_event_modes)[recommendation.event_id])}: ${h(list(recommendation.reasons).join(" "))} Influencing episodes: ${h(list(recommendation.influencing_episode_ids).join(", ") || "none")}.</p>`).join("")}
         </div></details>
-        <div class="footer"><span class="footer-note">The final slate contains only future candidates; no before value was invented for the new event.</span><button class="primary" id="runAgainButton" type="button">Run again</button></div>
+        <div class="footer"><span class="footer-note">The attended event was excluded; no before value was invented for the new live event.</span><button class="primary" id="runAgainButton" type="button">Run again</button></div>
       </div>`;
     }
 
